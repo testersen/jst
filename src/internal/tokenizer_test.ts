@@ -479,7 +479,7 @@ Deno.test("flushBuffer(state, tokens, type)", async (t) => {
 
     const tokens: Token[] = [];
 
-    flushBuffer(state, tokens, TokenType.Literal);
+    flushBuffer(state, tokens, TokenType.Interpolation);
 
     await t.step(
       "tokens array should have 1 token",
@@ -488,7 +488,7 @@ Deno.test("flushBuffer(state, tokens, type)", async (t) => {
 
     const token = tokens[0];
 
-    await t.step("token type should be Literal", () => {
+    await t.step("token type should be Interpolation", () => {
       assertExists(
         token,
         "Token should have been added by flushBuffer(), but wasn't",
@@ -496,8 +496,10 @@ Deno.test("flushBuffer(state, tokens, type)", async (t) => {
 
       assertStrictEquals(
         token.type,
-        TokenType.Literal,
-        `Expected token type to be Literal, but was ${TokenType[token.type]}`,
+        TokenType.Interpolation,
+        `Expected token type to be Interpolation, but was ${
+          TokenType[token.type]
+        }`,
       );
     });
 
@@ -548,7 +550,7 @@ Deno.test("flushBuffer(state, tokens, type)", async (t) => {
 
     const tokens: Token[] = [];
 
-    flushBuffer(state, tokens, TokenType.Interpolation);
+    flushBuffer(state, tokens, TokenType.Literal);
 
     await t.step(
       "tokens array should have 1 token",
@@ -565,10 +567,8 @@ Deno.test("flushBuffer(state, tokens, type)", async (t) => {
 
       assertStrictEquals(
         token.type,
-        TokenType.Interpolation,
-        `Expected token type to be Interpolation, but was ${
-          TokenType[token.type]
-        }`,
+        TokenType.Literal,
+        `Expected token type to be Literal, but was ${TokenType[token.type]}`,
       );
     });
 
