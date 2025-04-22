@@ -528,7 +528,7 @@ export class TokenizerStreamTransformer implements Transformer<string, Token> {
     chunk: string,
     controller: TransformStreamDefaultController<Token>,
   ) {
-    if ((this.#state as unknown) === undefined) {
+    if (this.#state === undefined) {
       throw new Error("TokenizerStreamTransformer has not been started");
     }
 
@@ -549,7 +549,7 @@ export class TokenizerStreamTransformer implements Transformer<string, Token> {
    * @throws {Error} If the transformer has not been started.
    */
   flush(controller: TransformStreamDefaultController<Token>) {
-    if ((this.#state as unknown) === undefined) {
+    if (this.#state === undefined) {
       throw new Error("TokenizerStreamTransformer has not been started");
     }
 
