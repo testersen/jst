@@ -40,6 +40,28 @@ Deno.test("Location", async (t) => {
     assertEquals(location.line, LINE);
     assertEquals(location.column, COLUMN);
   });
+
+  await t.step("throws for line < 1", () => {
+    const LINE = 0;
+    const COLUMN = 1;
+
+    assertThrows(
+      () => new Location(LINE, COLUMN),
+      Error,
+      "Line number must be greater than or equal to 1",
+    );
+  });
+
+  await t.step("throws for negative column", () => {
+    const LINE = 1;
+    const COLUMN = -1;
+
+    assertThrows(
+      () => new Location(LINE, COLUMN),
+      Error,
+      "Column number must be greater than or equal to 0",
+    );
+  });
 });
 
 Deno.test("RangeWithLocation", async (t) => {
