@@ -144,6 +144,16 @@ async function assertRange(
   });
 }
 
+/**
+ * A utility function to sanitize a string value for testing.
+ *
+ * @param value The string to sanitize.
+ * @returns The sanitized string.
+ */
+function sanitize(value: string): string {
+  return JSON.stringify(value).slice(1, -1);
+}
+
 Deno.test("createState()", async (t) => {
   await t.step("created state is in literal mode", () => {
     const state = createState();
