@@ -16,3 +16,7 @@ can have a more complex template where you want to do pattern matching against
 other strings, or optimistic matching against strings. You can think of JST as a
 simple way to evaluate JavaScript code in your templates, similar to the
 JavaScript template literals.
+
+[Handlebars]: https://handlebarsjs.com/
+[EJS]: https://ejs.co/
+[Pug]: https://pugjs.org/
