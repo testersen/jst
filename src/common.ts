@@ -9,6 +9,14 @@ export class Range {
   #end: number;
 
   constructor(start: number, end: number) {
+    if (start < 0) {
+      throw new Error("Start offset must be greater than or equal to 0");
+    }
+
+    if (end < start) {
+      throw new Error("End offset must be greater than or equal to start");
+    }
+
     this.#start = start;
     this.#end = end;
   }
