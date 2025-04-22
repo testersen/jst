@@ -14,6 +14,7 @@ import {
   type InterpolationMode,
   type LiteralMode,
   Mode,
+  processLiteralCharacter,
   trackCharacter,
   transitionFromLiteralToEscapeMode,
   transitionFromLiteralToInterpolationMode,
@@ -921,6 +922,87 @@ Deno.test("transitionFromLiteralToInterpolationMode(state, tokens)", async (t) =
       );
 
       assertStrictEquals(token.value, "foobar");
+    });
+  });
+});
+
+Deno.test("processLiteralCharacter(state, character, tokens", async (t) => {
+  await t.step("mutates buffer when not LF or {", async (t) => {
+    const state = createState() as LiteralMode;
+    const tokens: Token[] = [];
+
+    await t.step("state buffer is empty string before transition", () => {
+      assertStrictEquals(state.buffer, "", "Buffer should be empty");
+    });
+
+    processLiteralCharacter(state, "a", tokens);
+
+    await t.step("state buffer is a after transition", () => {
+      assertStrictEquals(state.buffer, "a", "Buffer should be a");
+    });
+
+    processLiteralCharacter(state, "b", tokens);
+
+    await t.step("state buffer is ab after transition", () => {
+      assertStrictEquals(state.buffer, "ab", "Buffer should be ab");
+    });
+
+    processLiteralCharacter(state, "c", tokens);
+
+    await t.step("state buffer is abc after transition", () => {
+      assertStrictEquals(state.buffer, "abc", "Buffer should be ab");
+    });
+  });
+
+  await t.step("switches to escape mode on \\", async (t) => {
+    const state = createState() as LiteralMode;
+    const tokens: Token[] = [];
+
+    await t.step("mode is literal", () => {
+      assertStrictEquals(
+        state.type,
+        Mode.Literal,
+        `State should be in Literal mode, but was ${Mode[state.type]}`,
+      );
+    });
+
+    // We have already tested the behavior of
+    // `transitionFromLiteralToEscapeMode` which is called during the processing
+    // of the escape character, so we won't test it here again.
+    processLiteralCharacter(state, "\\", tokens);
+
+    await t.step("state type is escape after transition", () => {
+      assertStrictEquals(
+        state.type,
+        Mode.Escape,
+        `State should be in Escape mode, but was ${Mode[state.type]}`,
+      );
+    });
+  });
+
+  await t.step("switches to interpolation mode on {", async (t) => {
+    const state = createState() as LiteralMode;
+    const tokens: Token[] = [];
+
+    await t.step("mode is literal", () => {
+      assertStrictEquals(
+        state.type,
+        Mode.Literal,
+        `State should be in Literal mode, but was ${Mode[state.type]}`,
+      );
+    });
+
+    // We have already tested the behavior of
+    // `transitionFromLiteralToInterpolationMode` which is called during the
+    // processing of the escape character, so we won't test it here again.
+    processLiteralCharacter(state, "{", tokens);
+
+    await t.step("state type is interpolation after transition", () => {
+      assertStrictEquals(
+        state.type,
+        Mode.Interpolation,
+        `State should be in Interpolation mode, but was ${Mode[state.type]}`,
+      );
     });
   });
 });
