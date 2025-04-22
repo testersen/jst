@@ -19,6 +19,9 @@
 # gitignore: Allow .gitignore
 !/.gitignore
 
+# coderabbit: Allow .coderabbit.yaml
+!/.coderabbit.yaml
+
 # vscode: Allow .vscode settings.json and extensions.json
 !/.vscode/settings.json
 !/.vscode/extensions.json
