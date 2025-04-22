@@ -16,6 +16,7 @@ import {
   type LiteralMode,
   Mode,
   processEscapeCharacter,
+  processInterpolationCharacter,
   processLiteralCharacter,
   trackCharacter,
   transitionFromEscapeToLiteralMode,
@@ -1404,4 +1405,346 @@ Deno.test("transitionFromInterpolationToLiteralMode(state, token)", async (t) =>
       assertStrictEquals(token.value, "foobar");
     });
   });
+});
+
+Deno.test("processInterpolationCharacter(state, character, tokens)", async (t) => {
+  await t.step("increments n when {", async (t) => {
+    const locationTracker = new LocationTracker();
+    const state: InterpolationMode = {
+      type: Mode.Interpolation,
+      locationTracker,
+      locationSnapshot: locationTracker.snapshot(),
+      n: 1,
+      buffer: "",
+    };
+    const tokens: Token[] = [];
+
+    await t.step("state is in interpolation mode", () => {
+      assertStrictEquals(
+        state.type,
+        Mode.Interpolation,
+        `State should be in Interpolation mode, but was ${Mode[state.type]}`,
+      );
+    });
+
+    await t.step("state n is 1 before processing", () => {
+      assertStrictEquals(state.n, 1, "n should be 1");
+    });
+
+    await t.step("state buffer is empty string before processing", () => {
+      assertStrictEquals(state.buffer, "", "Buffer should be empty");
+    });
+
+    processInterpolationCharacter(state, "{", tokens);
+
+    await t.step("state n is 2 after processing", () => {
+      assertStrictEquals(state.n, 2, "n should be 2");
+    });
+
+    await t.step("buffer is { after processing", () => {
+      assertStrictEquals(state.buffer, "{", "Buffer should be {");
+    });
+
+    processInterpolationCharacter(state, "{", tokens);
+
+    await t.step("state n is 3 after processing another {", () => {
+      assertStrictEquals(state.n, 3, "n should be 3");
+    });
+
+    await t.step("buffer is {{ after processing another {", () => {
+      assertStrictEquals(state.buffer, "{{", "Buffer should be {{");
+    });
+  });
+
+  await t.step("decrements n when }", async (t) => {
+    const locationTracker = new LocationTracker();
+    const state: InterpolationMode = {
+      type: Mode.Interpolation,
+      locationTracker,
+      locationSnapshot: locationTracker.snapshot(),
+      n: 5,
+      buffer: "{{{{",
+    };
+    const tokens: Token[] = [];
+
+    await t.step("state is in interpolation mode", () => {
+      assertStrictEquals(
+        state.type,
+        Mode.Interpolation,
+        `State should be in Interpolation mode, but was ${Mode[state.type]}`,
+      );
+    });
+
+    await t.step("state n is 5 before processing", () => {
+      assertStrictEquals(state.n, 5, "n should be 5");
+    });
+
+    await t.step("state buffer is {{{{ before processing", () => {
+      assertStrictEquals(state.buffer, "{{{{", "Buffer should be {{{{");
+    });
+
+    processInterpolationCharacter(state, "}", tokens);
+
+    await t.step("state n is 4 after processing", () => {
+      assertStrictEquals(state.n, 4, "n should be 4");
+    });
+
+    await t.step("buffer is {{{{} after processing", () => {
+      assertStrictEquals(state.buffer, "{{{{}", "Buffer should be {{{{}");
+    });
+
+    processInterpolationCharacter(state, "}", tokens);
+
+    await t.step("state n is 3 after processing another }", () => {
+      assertStrictEquals(state.n, 3, "n should be 3");
+    });
+
+    await t.step("buffer is {{{{}} after processing", () => {
+      assertStrictEquals(state.buffer, "{{{{}}", "Buffer should be {{{{}}");
+    });
+
+    processInterpolationCharacter(state, "}", tokens);
+
+    await t.step("state n is 2 after processing another }", () => {
+      assertStrictEquals(state.n, 2, "n should be 2");
+    });
+
+    await t.step("buffer is {{{{}}} after processing", () => {
+      assertStrictEquals(state.buffer, "{{{{}}}", "Buffer should be {{{{}}}");
+    });
+
+    processInterpolationCharacter(state, "}", tokens);
+
+    await t.step("state n is 1 after processing another }", () => {
+      assertStrictEquals(state.n, 1, "n should be 1");
+    });
+
+    await t.step("buffer is {{{{}}}} after processing", () => {
+      assertStrictEquals(state.buffer, "{{{{}}}}", "Buffer should be {{{{}}}}");
+    });
+  });
+
+  await t.step("switches to literal mode on } when n = 1", async (t) => {
+    const locationTracker = new LocationTracker();
+    const state: InterpolationMode = {
+      type: Mode.Interpolation,
+      locationTracker,
+      locationSnapshot: locationTracker.snapshot(),
+      n: 1,
+      buffer: "{{{{}}}}",
+    };
+    const tokens: Token[] = [];
+
+    await t.step("state is in interpolation mode", () => {
+      assertStrictEquals(
+        state.type,
+        Mode.Interpolation,
+        `State should be in Interpolation mode, but was ${Mode[state.type]}`,
+      );
+    });
+
+    await t.step("state n is 1 before processing", () => {
+      assertStrictEquals(state.n, 1, "n should be 1");
+    });
+
+    await t.step("state buffer is {{{{}}}} before processing", () => {
+      assertStrictEquals(
+        state.buffer,
+        "{{{{}}}}",
+        "Buffer should be {{{{}}}}",
+      );
+    });
+
+    processInterpolationCharacter(state, "}", tokens);
+
+    await t.step("state is in literal mode after processing", () => {
+      assertStrictEquals(
+        state.type,
+        Mode.Literal,
+        `State should be in Literal mode, but was ${Mode[state.type]}`,
+      );
+    });
+
+    await t.step("state buffer is an empty string after processing", () => {
+      assertStrictEquals(state.buffer, "", "Buffer should be an empty string");
+    });
+  });
+
+  await t.step("empty interpolation buffer does not add tokens", async (t) => {
+    const locationTracker = new LocationTracker();
+    const state: InterpolationMode = {
+      type: Mode.Interpolation,
+      locationTracker,
+      locationSnapshot: locationTracker.snapshot(),
+      n: 1,
+      buffer: "",
+    };
+    const tokens: Token[] = [];
+
+    await t.step("state is in interpolation mode", () => {
+      assertStrictEquals(
+        state.type,
+        Mode.Interpolation,
+        `State should be in Interpolation mode, but was ${Mode[state.type]}`,
+      );
+    });
+
+    await t.step("state buffer is empty string before processing", () => {
+      assertStrictEquals(state.buffer, "", "Buffer should be empty");
+    });
+
+    // We have already tested the behavior where n = 1 and
+    // mode is switched to literal mode, so we will not add
+    // further assertions for that here.
+    processInterpolationCharacter(state, "}", tokens);
+
+    await t.step(
+      "tokens array should be empty",
+      () => assertStrictEquals(tokens.length, 0, "token length should be 0"),
+    );
+  });
+
+  await t.step("adds token if buffer is not empty", async (t) => {
+    const locationTracker = new LocationTracker();
+    const state: InterpolationMode = {
+      type: Mode.Interpolation,
+      locationTracker,
+      locationSnapshot: locationTracker.snapshot(),
+      n: 1,
+      buffer: "foobar",
+    };
+    const tokens: Token[] = [];
+
+    await t.step("state is in interpolation mode", () => {
+      assertStrictEquals(
+        state.type,
+        Mode.Interpolation,
+        `State should be in Interpolation mode, but was ${Mode[state.type]}`,
+      );
+    });
+
+    await t.step("state buffer is foobar before processing", () => {
+      assertStrictEquals(state.buffer, "foobar", "Buffer should be foobar");
+    });
+
+    processInterpolationCharacter(state, "}", tokens);
+
+    await t.step("tokens array should have 1 token", () => {
+      assertStrictEquals(tokens.length, 1, "token length should be 1");
+    });
+
+    const token = tokens[0];
+
+    await t.step("token type should be Interpolation", () => {
+      assertExists(
+        token,
+        "Token should have been added by flushBuffer(), but wasn't",
+      );
+
+      assertStrictEquals(
+        token.type,
+        TokenType.Interpolation,
+        `Expected token type to be Interpolation, but was ${
+          TokenType[token.type]
+        }`,
+      );
+    });
+
+    await t.step(`token value should be foobar`, () => {
+      assertExists(
+        token.value,
+        "Token should have been added by flushBuffer(), but wasn't",
+      );
+
+      assertStrictEquals(token.value, "foobar");
+    });
+  });
+
+  await t.step(
+    // See note in processInterpolationCharacter about }
+    "interpolation decrements n when }, even in valid scenarios",
+    async (t) => {
+      const locationTracker = new LocationTracker();
+      const state: InterpolationMode = {
+        type: Mode.Interpolation,
+        locationTracker,
+        locationSnapshot: locationTracker.snapshot(),
+        n: 1,
+        buffer: "'",
+      };
+      const tokens: Token[] = [];
+
+      await t.step("state is in interpolation mode", () => {
+        assertStrictEquals(
+          state.type,
+          Mode.Interpolation,
+          `State should be in Interpolation mode, but was ${Mode[state.type]}`,
+        );
+      });
+
+      await t.step("state n is 1 before processing", () => {
+        assertStrictEquals(state.n, 1, "n should be 1");
+      });
+
+      await t.step('state buffer is "\'" before processing', () => {
+        assertStrictEquals(
+          state.buffer,
+          "'",
+          'Buffer should be "\'"',
+        );
+      });
+
+      processInterpolationCharacter(state, "}", tokens);
+
+      await t.step("state is in literal mode after processing", () => {
+        assertStrictEquals(
+          state.type,
+          Mode.Literal,
+          `State should be in Literal mode, but was ${Mode[state.type]}`,
+        );
+      });
+
+      await t.step("state buffer is an empty string after processing", () => {
+        assertStrictEquals(
+          state.buffer,
+          "",
+          "Buffer should be an empty string",
+        );
+      });
+
+      await t.step("state n should be undefined after processing", () => {
+        assertStrictEquals(state.n, undefined, "n should be undefined");
+      });
+
+      await t.step("tokens array should have 1 token", () => {
+        assertStrictEquals(tokens.length, 1, "token length should be 1");
+      });
+
+      const token = tokens[0];
+
+      await t.step("token type should be Interpolation", () => {
+        assertExists(
+          token,
+          "Token should have been added by flushBuffer(), but wasn't",
+        );
+
+        assertStrictEquals(
+          token.type,
+          TokenType.Interpolation,
+          `Expected token type to be Interpolation, but was ${
+            TokenType[token.type]
+          }`,
+        );
+      });
+
+      await t.step(`token value should be '`, () => {
+        assertExists(
+          token.value,
+          "Token should have been added by flushBuffer(), but wasn't",
+        );
+
+        assertStrictEquals(token.value, "'");
+      });
+    },
+  );
 });
