@@ -7,6 +7,7 @@ import {
 } from "@std/assert";
 
 import {
+  type AnyMode,
   createState,
   type EscapeMode,
   flushBuffer,
@@ -16,6 +17,7 @@ import {
   Mode,
   processLiteralCharacter,
   trackCharacter,
+  transitionFromEscapeToLiteralMode,
   transitionFromLiteralToEscapeMode,
   transitionFromLiteralToInterpolationMode,
 } from "./tokenizer.ts";
@@ -1002,6 +1004,51 @@ Deno.test("processLiteralCharacter(state, character, tokens", async (t) => {
         state.type,
         Mode.Interpolation,
         `State should be in Interpolation mode, but was ${Mode[state.type]}`,
+      );
+    });
+  });
+});
+
+Deno.test("transitionFromEscapeToLiteralMode(state)", async (t) => {
+  await t.step("changes state to literal mode", async (t) => {
+    const locationTracker = new LocationTracker();
+    const state: EscapeMode = {
+      type: Mode.Escape,
+      locationTracker,
+      locationSnapshot: locationTracker.snapshot(),
+    };
+
+    await t.step("state is in escape mode", () => {
+      assertStrictEquals(
+        state.type,
+        Mode.Escape,
+        `State should be in Escape mode, but was ${Mode[state.type]}`,
+      );
+    });
+
+    await t.step("state buffer is undefined before transition", () => {
+      assertStrictEquals(
+        (state as AnyMode).buffer,
+        undefined,
+        "Buffer should not exist",
+      );
+    });
+
+    transitionFromEscapeToLiteralMode(state);
+
+    await t.step("state is in literal mode", () => {
+      assertStrictEquals(
+        state.type,
+        Mode.Literal,
+        `State should be in Literal mode, but was ${Mode[state.type]}`,
+      );
+    });
+
+    await t.step("state buffer is empty string after transition", () => {
+      assertStrictEquals(
+        (state as AnyMode).buffer,
+        "",
+        "Buffer should be an empty string",
       );
     });
   });
