@@ -210,6 +210,21 @@ export class LocationTracker {
   }
 
   /**
+   * Move the offset forward {@link n} times, without changing the line or
+   * column.
+   *
+   * @param n The number of times to move the offset forward.
+   * @returns The new offset.
+   * @throws Error if {@link n} is less than `0`.
+   */
+  public offset(n: number = 1): number {
+    if (n < 0) {
+      throw new Error("Offset increment must be non-negative");
+    }
+    return this.#offset += n;
+  }
+
+  /**
    * Creates a new {@link LocationSnapshot} object with the current offset, line
    * number, and column number. This can later be used to create a new
    * {@link RangeWithLocation} object.

@@ -188,9 +188,9 @@ Deno.test("LocationSnapshot", async (t) => {
 
 Deno.test("LocationTracker", async (t) => {
   await t.step("tracks offsets and locations correctly", async (t) => {
-    const RANGE_START = 73;
-    const RANGE_END = 207;
-    const RANGE_LENGTH = 134;
+    const RANGE_START = 76;
+    const RANGE_END = 211;
+    const RANGE_LENGTH = 135;
     const START_LINE = 6;
     const START_COLUMN = 33;
     const END_LINE = 15;
@@ -201,6 +201,7 @@ Deno.test("LocationTracker", async (t) => {
     tracker.column(10);
     tracker.line(2);
     tracker.column(5);
+    tracker.offset(3);
     tracker.column(20);
     tracker.line(3);
     tracker.column(31);
@@ -214,6 +215,7 @@ Deno.test("LocationTracker", async (t) => {
     tracker.column(50);
     tracker.line(5);
     tracker.column(2);
+    tracker.offset(1);
     tracker.column(3);
 
     const range = tracker.complete(snapshot);
@@ -271,6 +273,16 @@ Deno.test("LocationTracker", async (t) => {
       () => tracker.line(-1),
       Error,
       "Line increment must be non-negative",
+    );
+  });
+
+  await t.step("throws for negative offset increments", () => {
+    const tracker = new LocationTracker();
+
+    assertThrows(
+      () => tracker.offset(-1),
+      Error,
+      "Offset increment must be non-negative",
     );
   });
 });
