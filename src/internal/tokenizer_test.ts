@@ -410,7 +410,7 @@ Deno.test("flushRange(state)", async (t) => {
   );
 });
 
-Deno.test("flushBuffer(state, tokens, type", async (t) => {
+Deno.test("flushBuffer(state, tokens, type)", async (t) => {
   await t.step("empty buffer does not add tokens", async (t) => {
     const state = createState() as LiteralMode;
 
