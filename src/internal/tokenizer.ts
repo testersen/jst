@@ -264,7 +264,7 @@ export function flushRange(state: State): RangeWithLocation {
  * @internal
  */
 export function flushBuffer(
-  state: LiteralMode | InterpolationMode,
+  state: State & { buffer: string },
   tokens: Token[],
   type: TokenType,
 ): void {
