@@ -188,7 +188,8 @@ export class LocationTracker {
       throw new Error("Column increment must be non-negative");
     }
     this.#column += n;
-    return this.#offset += n;
+    this.#offset += n;
+    return this.#offset;
   }
 
   /**
@@ -206,7 +207,8 @@ export class LocationTracker {
     }
     this.#line += n;
     this.#column = 0;
-    return this.#offset += n;
+    this.#offset += n;
+    return this.#offset;
   }
 
   /**
@@ -221,7 +223,8 @@ export class LocationTracker {
     if (n < 0) {
       throw new Error("Offset increment must be non-negative");
     }
-    return this.#offset += n;
+    this.#offset += n;
+    return this.#offset;
   }
 
   /**
