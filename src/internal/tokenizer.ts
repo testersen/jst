@@ -427,6 +427,14 @@ export function processInterpolationCharacter(
       state.buffer += character;
       break;
     case "}":
+      // Note (@jamesbradlee):
+      //
+      // Because of the way the interpolation mode works, we count any '}'
+      // character as a decrement, without respecting whether that character is
+      // inside a string in the given interpolation language. There are valid
+      // cases where '}' may appear inside interpolation mode, but shouldn't
+      // decreease the n value. At this moment, we will not handle this case,
+      // but we may in the future.
       state.n--;
       if (state.n === 0) {
         transitionFromInterpolationToLiteralMode(state, tokens);
