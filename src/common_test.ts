@@ -29,6 +29,16 @@ Deno.test("Range", async (t) => {
     assertEquals(range.length, RESULT);
   });
 
+  await t.step("handles zero-length ranges correctly", () => {
+    const START = 5;
+    const END = 5;
+    const RESULT = 0;
+
+    const range = new Range(START, END);
+
+    assertEquals(range.length, RESULT);
+  });
+
   await t.step("throws for negative start", () => {
     const START = -1;
     const END = 5;
