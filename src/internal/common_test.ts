@@ -8,7 +8,7 @@ import {
   RangeWithLocation,
   Token,
   TokenType,
-} from "../src/common.ts";
+} from "./common.ts";
 
 Deno.test("Range", async (t) => {
   await t.step("getters return the same given values", () => {
