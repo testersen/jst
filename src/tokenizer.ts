@@ -367,7 +367,7 @@ export function processEscapeCharacter(
       break;
     default:
       tokens.push(
-        new Token(TokenType.Literal, "\\" + character, flushRange(state)),
+        new Token(TokenType.Literal, `\\${character}`, flushRange(state)),
       );
       break;
   }
