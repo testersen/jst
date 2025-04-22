@@ -1,6 +1,7 @@
 {
   "recommendations": [
     "denoland.vscode-deno",
-    "github.vscode-github-actions"
+    "github.vscode-github-actions",
+    "redhat.vscode-yaml"
   ]
 }
