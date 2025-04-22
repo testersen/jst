@@ -243,34 +243,69 @@ export class LocationTracker {
   }
 }
 
+/**
+ * The {@link TokenType} describes how a sequence of characters
+ * should be interpreted.
+ */
 export enum TokenType {
+  /**
+   * A literal token is a sequence of characters that should be treated as a
+   * string literal.
+   */
   Literal,
+
+  /**
+   * An interpolation token is a sequence of characters that should be treated
+   * as code that will be executed at runtime to produce a, preferably, literal
+   * value.
+   */
   Interpolation,
 }
 
+/**
+ * The {@link Token} class is used to represent a sequence of characters, where
+ * the sequence of characters are located in a specific range of a source, and
+ * the sequence of characters should be interpreted as a specific type.
+ */
 export class Token {
   #type: TokenType;
   #value: string;
-  #range: Range;
+  #range: RangeWithLocation;
 
+  /**
+   * Create a new token.
+   *
+   * @param type The type of the token.
+   * @param value The value of the token.
+   * @param range The range of the token.
+   */
   constructor(
     type: TokenType,
     value: string,
-    range: Range,
+    range: RangeWithLocation,
   ) {
     this.#type = type;
     this.#value = value;
     this.#range = range;
   }
 
+  /**
+   * The type of the token.
+   */
   get type(): TokenType {
     return this.#type;
   }
 
+  /**
+   * The value of the token.
+   */
   get value(): string {
     return this.#value;
   }
 
+  /**
+   * The range and location of where the token is located in the source.
+   */
   get range(): Range {
     return this.#range;
   }
