@@ -953,7 +953,7 @@ Deno.test("processLiteralCharacter(state, character, tokens", async (t) => {
     processLiteralCharacter(state, "c", tokens);
 
     await t.step("state buffer is abc after transition", () => {
-      assertStrictEquals(state.buffer, "abc", "Buffer should be ab");
+      assertStrictEquals(state.buffer, "abc", "Buffer should be abc");
     });
   });
 
