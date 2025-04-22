@@ -65,7 +65,7 @@ async function assertRange(
       );
     }
 
-    if (START_LINE) {
+    if (START_LINE !== undefined) {
       await t.step(
         `start line should be ${START_LINE}`,
         () =>
@@ -77,7 +77,7 @@ async function assertRange(
       );
     }
 
-    if (START_COLUMN) {
+    if (START_COLUMN !== undefined) {
       await t.step(
         `start column should be ${START_COLUMN}`,
         () =>
@@ -89,14 +89,14 @@ async function assertRange(
       );
     }
 
-    if (END_LINE) {
+    if (END_LINE !== undefined) {
       await t.step(
         `end line should be ${END_LINE}`,
         () => assertEquals(endLine, END_LINE, `End line should be ${END_LINE}`),
       );
     }
 
-    if (END_COLUMN) {
+    if (END_COLUMN !== undefined) {
       await t.step(
         `end column should be ${END_COLUMN}`,
         () =>
