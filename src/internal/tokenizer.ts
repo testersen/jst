@@ -341,6 +341,12 @@ export function processLiteralCharacter(
   }
 }
 
+/**
+ * The {@link transitionFromEscapeToLiteralMode} function is used to transition
+ * from the escape mode to the literal mode.
+ *
+ * @param state The current state of the tokenizer.
+ */
 export function transitionFromEscapeToLiteralMode(
   state: EscapeMode,
 ): void {
