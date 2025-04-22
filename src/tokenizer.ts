@@ -11,9 +11,9 @@
  */
 
 import {
-  LocationSnapshot,
+  type LocationSnapshot,
   LocationTracker,
-  RangeWithLocation,
+  type RangeWithLocation,
   Token,
   TokenType,
 } from "./common.ts";
