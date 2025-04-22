@@ -302,7 +302,7 @@ export class Token {
   /**
    * The range and location of where the token is located in the source.
    */
-  get range(): Range {
+  get range(): RangeWithLocation {
     return this.#range;
   }
 }
