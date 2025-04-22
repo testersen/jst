@@ -255,7 +255,6 @@ export function flushRange(state: State): RangeWithLocation {
  * literal mode.
  *
  * @param state The current state of the tokenizer.
- * @returns The token generated from the literal mode, if any.
  *
  * @internal
  */
