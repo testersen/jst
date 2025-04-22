@@ -28,6 +28,28 @@ Deno.test("Range", async (t) => {
 
     assertEquals(range.length, RESULT);
   });
+
+  await t.step("throws for negative start", () => {
+    const START = -1;
+    const END = 5;
+
+    assertThrows(
+      () => new Range(START, END),
+      Error,
+      "Start offset must be greater than or equal to 0",
+    );
+  });
+
+  await t.step("throws for end < start", () => {
+    const START = 5;
+    const END = 1;
+
+    assertThrows(
+      () => new Range(START, END),
+      Error,
+      "End offset must be greater than or equal to start",
+    );
+  });
 });
 
 Deno.test("Location", async (t) => {
