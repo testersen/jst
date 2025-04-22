@@ -19,6 +19,7 @@ import {
   processLiteralCharacter,
   trackCharacter,
   transitionFromEscapeToLiteralMode,
+  transitionFromInterpolationToLiteralMode,
   transitionFromLiteralToEscapeMode,
   transitionFromLiteralToInterpolationMode,
 } from "./tokenizer.ts";
@@ -1277,4 +1278,130 @@ Deno.test("processEscapeCharacter(state, character, tokens)", async (t) => {
       });
     });
   }
+});
+
+Deno.test("transitionFromInterpolationToLiteralMode(state, token)", async (t) => {
+  await t.step("changes state to literal mode", async (t) => {
+    const locationTracker = new LocationTracker();
+    const state: InterpolationMode = {
+      type: Mode.Interpolation,
+      locationTracker,
+      locationSnapshot: locationTracker.snapshot(),
+      n: 1,
+      buffer: "",
+    };
+
+    await t.step("state is in interpolation mode before transition", () => {
+      assertStrictEquals(
+        state.type,
+        Mode.Interpolation,
+        `State should be in Interpolation mode, but was ${Mode[state.type]}`,
+      );
+    });
+
+    await t.step("state n should be a number before transition", () => {
+      assertStrictEquals(typeof state.n, "number", "n should be a number");
+    });
+
+    const tokens: Token[] = [];
+
+    transitionFromInterpolationToLiteralMode(state, tokens);
+
+    await t.step("state is in literal mode after transition", () => {
+      assertStrictEquals(
+        state.type,
+        Mode.Literal,
+        `State should be in Literal mode, but was ${Mode[state.type]}`,
+      );
+    });
+
+    await t.step("state buffer is an empty string after transition", () => {
+      assertStrictEquals(state.buffer, "", "Buffer should be an empty string");
+    });
+
+    await t.step("state n should be undefined after transition", () => {
+      assertStrictEquals(state.n, undefined, "n should be undefined");
+    });
+  });
+
+  await t.step("empty buffer does not add token", async (t) => {
+    const locationTracker = new LocationTracker();
+    const state: InterpolationMode = {
+      type: Mode.Interpolation,
+      locationTracker,
+      locationSnapshot: locationTracker.snapshot(),
+      n: 1,
+      buffer: "",
+    };
+
+    await t.step("state is in interpolation mode before transition", () => {
+      assertStrictEquals(
+        state.type,
+        Mode.Interpolation,
+        `State should be in Interpolation mode, but was ${Mode[state.type]}`,
+      );
+    });
+
+    const tokens: Token[] = [];
+
+    transitionFromInterpolationToLiteralMode(state, tokens);
+
+    await t.step(
+      "tokens array should be empty",
+      () => assertStrictEquals(tokens.length, 0, "token length should be 0"),
+    );
+  });
+
+  await t.step("adds token if buffer is not empty", async (t) => {
+    const locationTracker = new LocationTracker();
+    const state: InterpolationMode = {
+      type: Mode.Interpolation,
+      locationTracker,
+      locationSnapshot: locationTracker.snapshot(),
+      n: 1,
+      buffer: "foobar",
+    };
+
+    await t.step("state is in interpolation mode before transition", () => {
+      assertStrictEquals(
+        state.type,
+        Mode.Interpolation,
+        `State should be in Interpolation mode, but was ${Mode[state.type]}`,
+      );
+    });
+
+    const tokens: Token[] = [];
+
+    transitionFromInterpolationToLiteralMode(state, tokens);
+
+    await t.step("tokens array should have 1 token", () => {
+      assertStrictEquals(tokens.length, 1, "token length should be 1");
+    });
+
+    const token = tokens[0];
+
+    await t.step("token type should be Interpolation", () => {
+      assertExists(
+        token,
+        "Token should have been added by flushBuffer(), but wasn't",
+      );
+
+      assertStrictEquals(
+        token.type,
+        TokenType.Interpolation,
+        `Expected token type to be Interpolation, but was ${
+          TokenType[token.type]
+        }`,
+      );
+    });
+
+    await t.step(`token value should be foobar`, () => {
+      assertExists(
+        token.value,
+        "Token should have been added by flushBuffer(), but wasn't",
+      );
+
+      assertStrictEquals(token.value, "foobar");
+    });
+  });
 });
