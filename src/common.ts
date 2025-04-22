@@ -1,8 +1,7 @@
 /**
  * Defines a range.
  *
- * A range is used to represent the start and end offsets of
- * some entity.
+ * A range is used to represent the start and end offsets of some entity.
  */
 export class Range {
   #start: number;
@@ -37,9 +36,8 @@ export class Range {
 /**
  * Defines a location.
  *
- * A location, similar to {@link Range}, is used to
- * represent the offset of some entity, but in line and
- * column format, instead of start and end offsets.
+ * A location, similar to {@link Range}, is used to represent the offset of some
+ * entity, but in line and column format, instead of start and end offsets.
  */
 export class Location {
   #line: number;
@@ -82,9 +80,9 @@ export class Location {
 /**
  * Defines a range with a location.
  *
- * A range with a location is used to represent the start
- * and end offsets of some entity, as well as the line and
- * column numbers of the start and end offsets.
+ * A range with a location is used to represent the start and end offsets of
+ * some entity, as well as the line and column numbers of the start and end
+ * offsets.
  */
 export class RangeWithLocation extends Range {
   #startLocation: Location;
@@ -127,8 +125,8 @@ export class RangeWithLocation extends Range {
 /**
  * Defines a location snapshot.
  *
- * A location snapshot is used to represent the offset and
- * line and column numbers of some position in a sequence.
+ * A location snapshot is used to represent the offset and line and column
+ * numbers of some position in a sequence.
  */
 export class LocationSnapshot {
   #offset: number;
@@ -149,20 +147,17 @@ export class LocationSnapshot {
   }
 
   /**
-   * Complete the location snapshot with another location
-   * snapshot.
+   * Complete the location snapshot with another location snapshot.
    *
-   * This will create a new {@link RangeWithLocation} object
-   * with the start and end offsets of the two location
-   * snapshots, as well as the start and end locations of
-   * the two location snapshots.
+   * This will create a new {@link RangeWithLocation} object with the start and
+   * end offsets of the two location snapshots, as well as the start and end
+   * locations of the two location snapshots.
    *
    * @param other The other location snapshot to complete with.
    *
-   * @returns A new {@link RangeWithLocation} object with the
-   * start and end offsets of the two location snapshots, as
-   * well as the start and end locations of the two location
-   * snapshots.
+   * @returns A new {@link RangeWithLocation} object with the start and end
+   *          offsets of the two location snapshots, as well as the start and
+   *          end locations of the two location snapshots.
    */
   public complete(other: LocationSnapshot): RangeWithLocation {
     return new RangeWithLocation(
@@ -219,8 +214,8 @@ export class LocationTracker {
    * number, and column number. This can later be used to create a new
    * {@link RangeWithLocation} object.
    *
-   * @returns A new {@link LocationSnapshot} object with the current offset, line
-   * number, and column number.
+   * @returns A new {@link LocationSnapshot} object with the current offset,
+   *          line number, and column number.
    */
   public snapshot(): LocationSnapshot {
     return new LocationSnapshot(this.#offset, this.#line, this.#column);
@@ -234,9 +229,10 @@ export class LocationTracker {
    * {@link LocationSnapshot.complete}.
    *
    * @param snapshot The location snapshot to complete with.
+   *
    * @returns A new {@link RangeWithLocation} object with the start and end
-   * offsets of the two location snapshots, as well as the start and end
-   * locations of the two location snapshots.
+   *          offsets of the two location snapshots, as well as the start and
+   *          end locations of the two location snapshots.
    */
   public complete(snapshot: LocationSnapshot): RangeWithLocation {
     return snapshot.complete(this.snapshot());
@@ -244,8 +240,8 @@ export class LocationTracker {
 }
 
 /**
- * The {@link TokenType} describes how a sequence of characters
- * should be interpreted.
+ * The {@link TokenType} describes how a sequence of characters should be
+ * interpreted.
  */
 export enum TokenType {
   /**
