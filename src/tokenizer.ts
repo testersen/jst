@@ -99,7 +99,7 @@ export interface BaseMode {
  */
 interface LiteralMode extends BaseMode {
   /**
-   * The literal type constnat.
+   * The literal type constant.
    */
   type: Mode.Literal;
 
