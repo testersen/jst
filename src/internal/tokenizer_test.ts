@@ -559,7 +559,7 @@ Deno.test("flushBuffer(state, tokens, type)", async (t) => {
 
     const token = tokens[0];
 
-    await t.step("token type should be Interpolation", () => {
+    await t.step("token type should be Literal", () => {
       assertExists(
         token,
         "Token should have been added by flushBuffer(), but wasn't",
