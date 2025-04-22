@@ -6,6 +6,8 @@ import {
   LocationTracker,
   Range,
   RangeWithLocation,
+  Token,
+  TokenType,
 } from "../src/common.ts";
 
 Deno.test("Range", async (t) => {
@@ -269,6 +271,72 @@ Deno.test("LocationTracker", async (t) => {
       () => tracker.line(-1),
       Error,
       "Line increment must be non-negative",
+    );
+  });
+});
+
+Deno.test("Token", async (t) => {
+  await t.step("getters return the same given values", async (t) => {
+    const TYPE = TokenType.Literal;
+    const VALUE = "value";
+    const START = 0;
+    const END = 5;
+    const START_LINE = 1;
+    const START_COLUMN = 0;
+    const END_LINE = 1;
+    const END_COLUMN = 5;
+    const RANGE = new RangeWithLocation(
+      START,
+      END,
+      new Location(START_LINE, START_COLUMN),
+      new Location(END_LINE, END_COLUMN),
+    );
+
+    const token = new Token(TYPE, VALUE, RANGE);
+
+    await t.step(
+      `token.type is ${TYPE}`,
+      () => assertEquals(token.type, TYPE),
+    );
+
+    await t.step(
+      `token.value is ${VALUE}`,
+      () => assertEquals(token.value, VALUE),
+    );
+
+    await t.step(
+      `token.range.start is ${START}`,
+      () => assertEquals(token.range.start, START),
+    );
+
+    await t.step(
+      `token.range.end is ${END}`,
+      () => assertEquals(token.range.end, END),
+    );
+
+    await t.step(
+      `token.range.length is ${END}`,
+      () => assertEquals(token.range.length, END),
+    );
+
+    await t.step(
+      `token.range.startLocation.line is ${START_LINE}`,
+      () => assertEquals(token.range.startLocation.line, START_LINE),
+    );
+
+    await t.step(
+      `token.range.startLocation.column is ${START_COLUMN}`,
+      () => assertEquals(token.range.startLocation.column, START_COLUMN),
+    );
+
+    await t.step(
+      `token.range.endLocation.line is ${END_LINE}`,
+      () => assertEquals(token.range.endLocation.line, END_LINE),
+    );
+
+    await t.step(
+      `token.range.endLocation.column is ${END_COLUMN}`,
+      () => assertEquals(token.range.endLocation.column, END_COLUMN),
     );
   });
 });
