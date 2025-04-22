@@ -97,7 +97,7 @@ export interface BaseMode {
  *
  * @internal
  */
-interface LiteralMode extends BaseMode {
+export interface LiteralMode extends BaseMode {
   /**
    * The literal type constant.
    */
@@ -115,7 +115,7 @@ interface LiteralMode extends BaseMode {
  *
  * @internal
  */
-interface EscapeMode extends BaseMode {
+export interface EscapeMode extends BaseMode {
   /**
    * The escape type constant.
    */
@@ -128,7 +128,7 @@ interface EscapeMode extends BaseMode {
  *
  * @internal
  */
-interface InterpolationMode extends BaseMode {
+export interface InterpolationMode extends BaseMode {
   /**
    * The interpolation type constant.
    */
