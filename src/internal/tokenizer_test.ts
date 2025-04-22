@@ -15,6 +15,7 @@ import {
   type InterpolationMode,
   type LiteralMode,
   Mode,
+  processEscapeCharacter,
   processLiteralCharacter,
   trackCharacter,
   transitionFromEscapeToLiteralMode,
@@ -1052,4 +1053,228 @@ Deno.test("transitionFromEscapeToLiteralMode(state)", async (t) => {
       );
     });
   });
+});
+
+Deno.test("processEscapeCharacter(state, character, tokens)", async (t) => {
+  await t.step("escapes \\", async (t) => {
+    const locationTracker = new LocationTracker();
+    const state: EscapeMode = {
+      type: Mode.Escape,
+      locationTracker,
+      locationSnapshot: locationTracker.snapshot(),
+    };
+    const tokens: Token[] = [];
+
+    await t.step("state is in escape mode", () => {
+      assertStrictEquals(
+        state.type,
+        Mode.Escape,
+        `State should be in Escape mode, but was ${Mode[state.type]}`,
+      );
+    });
+
+    await t.step("state buffer is undefined before transition", () => {
+      assertStrictEquals(
+        (state as AnyMode).buffer,
+        undefined,
+        "Buffer should not exist",
+      );
+    });
+
+    processEscapeCharacter(state, "\\", tokens);
+
+    await t.step("state is in literal mode after transition", () => {
+      assertStrictEquals(
+        state.type,
+        Mode.Literal,
+        `State should be in Literal mode, but was ${Mode[state.type]}`,
+      );
+    });
+
+    await t.step("state buffer is an empty string after transition", () => {
+      assertStrictEquals(
+        (state as AnyMode).buffer,
+        "",
+        "Buffer should be an empty string",
+      );
+    });
+
+    await t.step("tokens array should have 1 token", () => {
+      assertStrictEquals(tokens.length, 1, "token length should be 1");
+    });
+
+    const token = tokens[0];
+
+    await t.step("token type should be Literal", () => {
+      assertExists(
+        token,
+        "Token should have been added by flushBuffer(), but wasn't",
+      );
+
+      assertStrictEquals(
+        token.type,
+        TokenType.Literal,
+        `Expected token type to be Literal, but was ${TokenType[token.type]}`,
+      );
+    });
+
+    await t.step("token value should be \\", () => {
+      assertExists(
+        token.value,
+        "Token should have been added by flushBuffer(), but wasn't",
+      );
+
+      assertStrictEquals(token.value, "\\");
+    });
+  });
+
+  await t.step("escapes {", async (t) => {
+    const locationTracker = new LocationTracker();
+    const state: EscapeMode = {
+      type: Mode.Escape,
+      locationTracker,
+      locationSnapshot: locationTracker.snapshot(),
+    };
+    const tokens: Token[] = [];
+
+    await t.step("state is in escape mode", () => {
+      assertStrictEquals(
+        state.type,
+        Mode.Escape,
+        `State should be in Escape mode, but was ${Mode[state.type]}`,
+      );
+    });
+
+    await t.step("state buffer is undefined before transition", () => {
+      assertStrictEquals(
+        (state as AnyMode).buffer,
+        undefined,
+        "Buffer should not exist",
+      );
+    });
+
+    processEscapeCharacter(state, "{", tokens);
+
+    await t.step("state is in literal mode after transition", () => {
+      assertStrictEquals(
+        state.type,
+        Mode.Literal,
+        `State should be in Literal mode, but was ${Mode[state.type]}`,
+      );
+    });
+
+    await t.step("state buffer is an empty string after transition", () => {
+      assertStrictEquals(
+        (state as AnyMode).buffer,
+        "",
+        "Buffer should be an empty string",
+      );
+    });
+
+    await t.step("tokens array should have 1 token", () => {
+      assertStrictEquals(tokens.length, 1, "token length should be 1");
+    });
+
+    const token = tokens[0];
+
+    await t.step("token type should be Literal", () => {
+      assertExists(
+        token,
+        "Token should have been added by flushBuffer(), but wasn't",
+      );
+
+      assertStrictEquals(
+        token.type,
+        TokenType.Literal,
+        `Expected token type to be Literal, but was ${TokenType[token.type]}`,
+      );
+    });
+
+    await t.step("token value should be {", () => {
+      assertExists(
+        token.value,
+        "Token should have been added by flushBuffer(), but wasn't",
+      );
+
+      assertStrictEquals(token.value, "{");
+    });
+  });
+
+  for (const char of "abc123&%#\n\r") {
+    const representation = char
+      .replaceAll("\n", "\\n")
+      .replaceAll("\r", "\\r");
+
+    await t.step(`does not escape ${representation}`, async (t) => {
+      const locationTracker = new LocationTracker();
+      const state: EscapeMode = {
+        type: Mode.Escape,
+        locationTracker,
+        locationSnapshot: locationTracker.snapshot(),
+      };
+      const tokens: Token[] = [];
+
+      await t.step("state is in escape mode", () => {
+        assertStrictEquals(
+          state.type,
+          Mode.Escape,
+          `State should be in Escape mode, but was ${Mode[state.type]}`,
+        );
+      });
+
+      await t.step("state buffer is undefined before transition", () => {
+        assertStrictEquals(
+          (state as AnyMode).buffer,
+          undefined,
+          "Buffer should not exist",
+        );
+      });
+
+      processEscapeCharacter(state, char, tokens);
+
+      await t.step("state is in literal mode after transition", () => {
+        assertStrictEquals(
+          state.type,
+          Mode.Literal,
+          `State should be in Literal mode, but was ${Mode[state.type]}`,
+        );
+      });
+
+      await t.step("state buffer is an empty string after transition", () => {
+        assertStrictEquals(
+          (state as AnyMode).buffer,
+          "",
+          "Buffer should be an empty string",
+        );
+      });
+
+      await t.step("tokens array should have 1 token", () => {
+        assertStrictEquals(tokens.length, 1, "token length should be 1");
+      });
+
+      const token = tokens[0];
+
+      await t.step("token type should be Literal", () => {
+        assertExists(
+          token,
+          "Token should have been added by flushBuffer(), but wasn't",
+        );
+
+        assertStrictEquals(
+          token.type,
+          TokenType.Literal,
+          `Expected token type to be Literal, but was ${TokenType[token.type]}`,
+        );
+      });
+
+      await t.step(`token value should be \\${char}`, () => {
+        assertExists(
+          token.value,
+          "Token should have been added by flushBuffer(), but wasn't",
+        );
+
+        assertStrictEquals(token.value, `\\${char}`);
+      });
+    });
+  }
 });
