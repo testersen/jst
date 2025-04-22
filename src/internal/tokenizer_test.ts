@@ -19,6 +19,18 @@ import {
 } from "./common.ts";
 
 /**
+ * The {@link ExpectedRange} interface lets the caller define the expected
+ * properties of a {@link RangeWithLocation} object.
+ */
+interface ExpectedRange {
+    start?: number;
+    end?: number;
+    length?: number;
+    startLocation?: { line?: number; column?: number };
+    endLocation?: { line?: number; column?: number };
+}
+
+/**
  * A utility function to assert that a range has expected values.
  *
  * @param t The test context.
@@ -30,13 +42,7 @@ async function assertRange(
   t: Deno.TestContext,
   title: string,
   actual: RangeWithLocation,
-  expected: {
-    start?: number;
-    end?: number;
-    length?: number;
-    startLocation?: { line?: number; column?: number };
-    endLocation?: { line?: number; column?: number };
-  },
+  expected: ExpectedRange,
 ) {
   await t.step(title, async (t) => {
     const {
