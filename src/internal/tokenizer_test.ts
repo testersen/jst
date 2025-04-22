@@ -16,6 +16,7 @@ import {
   Mode,
   trackCharacter,
   transitionFromLiteralToEscapeMode,
+  transitionFromLiteralToInterpolationMode,
 } from "./tokenizer.ts";
 import {
   LocationSnapshot,
@@ -785,6 +786,112 @@ Deno.test("transitionFromLiteralToEscapeMode(state, tokens)", async (t) => {
     await t.step(
       "state is in escape mode",
       () => assertStrictEquals(state.type, Mode.Escape),
+    );
+
+    await t.step(
+      "tokens array should have 1 token",
+      () => assertStrictEquals(tokens.length, 1, "token length should be 1"),
+    );
+
+    const token = tokens[0];
+
+    await t.step("token type should be Literal", () => {
+      assertExists(
+        token,
+        "Token should have been added by flushBuffer(), but wasn't",
+      );
+
+      assertStrictEquals(
+        token.type,
+        TokenType.Literal,
+        `Expected token type to be Literal, but was ${TokenType[token.type]}`,
+      );
+    });
+
+    await t.step(`token value should be foobar`, () => {
+      assertExists(
+        token.value,
+        "Token should have been added by flushBuffer(), but wasn't",
+      );
+
+      assertStrictEquals(token.value, "foobar");
+    });
+  });
+});
+
+Deno.test("transitionFromLiteralToInterpolationMode(state, tokens)", async (t) => {
+  await t.step("changes state to interpolation mode", async (t) => {
+    const state = createState() as LiteralMode;
+
+    await t.step("state is in literal mode", () => {
+      assertStrictEquals(
+        state.type,
+        Mode.Literal,
+        `State should be in Literal mode, but was ${Mode[state.type]}`,
+      );
+    });
+
+    await t.step("state buffer is empty string before transition", () => {
+      assertStrictEquals(state.buffer, "", "Buffer should be empty");
+    });
+
+    transitionFromLiteralToInterpolationMode(state, []);
+
+    const castedState = state as unknown as InterpolationMode;
+
+    await t.step("state is in interpolation mode", () => {
+      assertStrictEquals(
+        castedState.type,
+        Mode.Interpolation,
+        `State should be in Interpolation mode, but was ${
+          Mode[castedState.type]
+        }`,
+      );
+    });
+
+    await t.step("state buffer is an empty string after transition", () => {
+      assertStrictEquals(state.buffer, "", "Buffer should be an empty string");
+    });
+  });
+
+  await t.step("does not add tokens if buffer is empty", async (t) => {
+    const state = createState() as LiteralMode;
+    const tokens: Token[] = [];
+
+    transitionFromLiteralToInterpolationMode(state, tokens);
+
+    await t.step(
+      "state is in interpolation mode",
+      () => assertStrictEquals(state.type, Mode.Interpolation),
+    );
+
+    await t.step(
+      "tokens array should be empty",
+      () => assertStrictEquals(tokens.length, 0, "token length should be 0"),
+    );
+
+    await t.step(
+      "state buffer should be an empty string",
+      () =>
+        assertStrictEquals(
+          state.buffer,
+          "",
+          "Buffer should be an empty string",
+        ),
+    );
+  });
+
+  await t.step("adds tokens if buffer is not empty", async (t) => {
+    const state = createState() as LiteralMode;
+    const tokens: Token[] = [];
+
+    state.buffer = "foobar";
+
+    transitionFromLiteralToInterpolationMode(state, tokens);
+
+    await t.step(
+      "state is in interpolation mode",
+      () => assertStrictEquals(state.type, Mode.Interpolation),
     );
 
     await t.step(
