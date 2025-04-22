@@ -929,7 +929,7 @@ Deno.test("transitionFromLiteralToInterpolationMode(state, tokens)", async (t) =
   });
 });
 
-Deno.test("processLiteralCharacter(state, character, tokens", async (t) => {
+Deno.test("processLiteralCharacter(state, character, tokens)", async (t) => {
   await t.step("mutates buffer when not LF or {", async (t) => {
     const state = createState() as LiteralMode;
     const tokens: Token[] = [];
