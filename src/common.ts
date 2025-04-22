@@ -174,7 +174,7 @@ export class LocationTracker {
    */
   public column(n: number = 1): number {
     if (n < 0) {
-      throw new Error("n must be greater than or equal to 0");
+      throw new Error("Column increment must be non-negative");
     }
     this.#column += n;
     return this.#offset += n;
@@ -191,7 +191,7 @@ export class LocationTracker {
    */
   public line(n: number = 1): number {
     if (n < 0) {
-      throw new Error("n must be greater than or equal to 0");
+      throw new Error("Line increment must be non-negative");
     }
     this.#line += n;
     this.#column = 0;
