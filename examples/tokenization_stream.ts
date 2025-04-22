@@ -17,10 +17,10 @@ const stream = new TokenizerStream();
 const writer = stream.writable.getWriter();
 
 for (const chunk of chunks) {
-  writer.write(chunk);
+  await writer.write(chunk);
 }
 
-writer.close();
+await writer.close();
 
 for await (const token of stream.readable) {
   console.log(
