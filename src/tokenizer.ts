@@ -194,12 +194,17 @@ export function createState(): State {
  * @internal
  */
 export function trackCharacter(state: State, character: string): void {
-  if (character === "\n") {
-    state.locationTracker.line();
-  } else if (character === "\r") {
-    // ignore
-  } else {
-    state.locationTracker.column();
+  switch (character) {
+    case "\n":
+      state.locationTracker.line();
+      break;
+    case "\r":
+      // \r is a carriage return, so we don't want to increment the column
+      state.locationTracker.offset();
+      break;
+    default:
+      state.locationTracker.column();
+      break;
   }
 }
 
