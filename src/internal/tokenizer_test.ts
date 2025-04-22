@@ -12,6 +12,14 @@ import {
   type RangeWithLocation,
 } from "./common.ts";
 
+/**
+ * A utility function to assert that a range has expected values.
+ *
+ * @param t The test context.
+ * @param title The title of the test.
+ * @param actual The actual range to assert.
+ * @param expected The expected values for the range.
+ */
 async function assertRange(
   t: Deno.TestContext,
   title: string,
