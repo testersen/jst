@@ -44,6 +44,14 @@ export class Location {
    * @param column The column number of the location.
    */
   constructor(line: number, column: number) {
+    if (line < 1) {
+      throw new Error("Line number must be greater than or equal to 1");
+    }
+
+    if (column < 0) {
+      throw new Error("Column number must be greater than or equal to 0");
+    }
+
     this.#line = line;
     this.#column = column;
   }
