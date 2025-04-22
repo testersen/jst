@@ -285,7 +285,7 @@ export function transitionFromLiteralToEscapeMode(
   const castedState = state as unknown as EscapeMode;
   castedState.type = Mode.Escape;
 
-  delete (state as AnyMode).buffer;
+  (state as AnyMode).buffer = undefined;
 }
 
 /**
@@ -391,7 +391,7 @@ export function transitionFromInterpolationToLiteralMode(
   castedState.type = Mode.Literal;
   castedState.buffer = "";
 
-  delete (state as AnyMode).n;
+  (state as AnyMode).n = undefined;
 }
 
 /**
