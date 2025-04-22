@@ -496,7 +496,7 @@ export class TokenizerStreamTransformer implements Transformer<string, Token> {
    * new state for the tokenizer.
    */
   start() {
-    if ((this.#state as unknown) !== undefined) {
+    if (this.#state !== undefined) {
       throw new Error("TokenizerStreamTransformer has already been started");
     }
 
