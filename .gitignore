@@ -1,0 +1,36 @@
+# Ignore everything
+*
+
+# github: Allow GitHub eco-system.
+# .codeowners: Allow CODEOWNERS
+!/.github/CODEOWNERS
+# .workflows: Allow workflows
+!/.github/workflows/*.yaml
+
+# dir: Allow directories
+!/**/
+
+# license: Allow LICENSE
+!/LICENSE
+
+# readme: Allow README
+!/README.md
+
+# gitignore: Allow .gitignore
+!/.gitignore
+
+# vscode: Allow .vscode settings.json and extensions.json
+!/.vscode/settings.json
+!/.vscode/extensions.json
+
+# markdown: Allow markdown files anywhere
+!/**/*.md
+
+# deno: Allow Deno files
+# .config: Allow deno.json files anywhere
+!/**/deno.json
+# .lock: Allow deno.lock
+!/deno.lock
+# .typescript: Allow TypeScript files anywhere
+!/**/*.ts
+!/**/*.tsx
