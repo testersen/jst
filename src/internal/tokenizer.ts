@@ -268,7 +268,7 @@ export function flushBuffer(
   tokens: Token[],
   type: TokenType,
 ): void {
-  if (state.buffer.length > 0) {
+  if (typeof state.buffer === "string" && state.buffer.length > 0) {
     tokens.push(new Token(type, state.buffer, flushRange(state)));
     state.buffer = "";
   }
