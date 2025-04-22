@@ -1,5 +1,4 @@
-import { TokenType } from "../src/internal/common.ts";
-import { tokenize } from "../src/internal/tokenizer.ts";
+import { tokenize, TokenType } from "../src/tokenizer.ts";
 
 console.log(
   tokenize("Hello \\{world} How are you, {firstName{}}?").map((token) =>

@@ -1,5 +1,4 @@
-import { TokenType } from "../src/internal/common.ts";
-import { TokenizerStream } from "../src/internal/tokenizer.ts";
+import { TokenizerStream, TokenType } from "../src/tokenizer.ts";
 
 const chunks = [
   "Hell",
