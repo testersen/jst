@@ -1,7 +1,13 @@
-import { assertEquals, assertExists, assertInstanceOf } from "@std/assert";
+import {
+  assertEquals,
+  assertExists,
+  assertInstanceOf,
+  assertNotStrictEquals,
+} from "@std/assert";
 
 import {
   createState,
+  flushRange,
   type LiteralMode,
   Mode,
   trackCharacter,
@@ -300,6 +306,86 @@ Deno.test("trackCharacter(state, character)", async (t) => {
           length: 27,
           startLocation: { line: 1, column: 0 },
           endLocation: { line: 4, column: 2 },
+        },
+      );
+    },
+  );
+});
+
+Deno.test("flushRange(state)", async (t) => {
+  await t.step(
+    "returns range with location and replaces previous snapshot",
+    async (t) => {
+      const state = createState();
+
+      await assertRange(
+        t,
+        "state has default cursor position",
+        state.locationTracker.complete(state.locationSnapshot),
+        {
+          start: 0,
+          end: 0,
+          length: 0,
+          startLocation: { line: 1, column: 0 },
+          endLocation: { line: 1, column: 0 },
+        },
+      );
+
+      for (const char of "hello world") {
+        trackCharacter(state, char);
+      }
+
+      const snapshot1 = state.locationSnapshot;
+      const range1 = flushRange(state);
+      const snapshot2 = state.locationSnapshot;
+
+      assertNotStrictEquals(
+        snapshot1,
+        snapshot2,
+        "Snapshots should be different",
+      );
+
+      await assertRange(
+        t,
+        "Range1 has end offset 11, line 1, column 11",
+        range1,
+        {
+          start: 0,
+          end: 11,
+          length: 11,
+          startLocation: { line: 1, column: 0 },
+          endLocation: { line: 1, column: 11 },
+        },
+      );
+
+      for (const char of "foo\r\nbar") {
+        trackCharacter(state, char);
+      }
+
+      const range2 = flushRange(state);
+      const snapshot3 = state.locationSnapshot;
+
+      assertNotStrictEquals(
+        snapshot2,
+        snapshot3,
+        "Snapshots should be different",
+      );
+      assertNotStrictEquals(
+        snapshot1,
+        snapshot3,
+        "Snapshots should be different",
+      );
+
+      await assertRange(
+        t,
+        "Range2 has end offset 19, line 2, column 3",
+        range2,
+        {
+          start: 11,
+          end: 19,
+          length: 8,
+          startLocation: { line: 1, column: 11 },
+          endLocation: { line: 2, column: 3 },
         },
       );
     },
