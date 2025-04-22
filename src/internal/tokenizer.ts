@@ -471,6 +471,8 @@ export function flushState(
   switch (state.type) {
     case Mode.Literal: {
       flushBuffer(state, tokens, TokenType.Literal);
+      // We'll return only the first token, because flushBuffer will never
+      // produce more than a single token.
       return tokens[0];
     }
     case Mode.Escape:
