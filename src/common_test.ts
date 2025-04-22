@@ -281,6 +281,7 @@ Deno.test("Token", async (t) => {
     const VALUE = "value";
     const START = 0;
     const END = 5;
+    const LENGTH = 5;
     const START_LINE = 1;
     const START_COLUMN = 0;
     const END_LINE = 1;
@@ -315,8 +316,8 @@ Deno.test("Token", async (t) => {
     );
 
     await t.step(
-      `token.range.length is ${END}`,
-      () => assertEquals(token.range.length, END),
+      `token.range.length is ${LENGTH}`,
+      () => assertEquals(token.range.length, LENGTH),
     );
 
     await t.step(
