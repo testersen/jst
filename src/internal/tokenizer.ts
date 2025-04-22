@@ -24,7 +24,7 @@ import {
  *
  * @internal
  */
-enum Mode {
+export enum Mode {
   /**
    * The literal mode is the default mode. It is used to identify a string that
    * is not escaped or interpolated.
@@ -153,7 +153,7 @@ interface InterpolationMode extends BaseMode {
  *
  * @internal
  */
-type State = LiteralMode | EscapeMode | InterpolationMode;
+export type State = LiteralMode | EscapeMode | InterpolationMode;
 
 /**
  * The {@link AnyMode} type is used to provide optional typing for the state of
@@ -161,7 +161,7 @@ type State = LiteralMode | EscapeMode | InterpolationMode;
  *
  * @internal
  */
-type AnyMode =
+export type AnyMode =
   & Partial<LiteralMode>
   & Partial<EscapeMode>
   & Partial<InterpolationMode>;
