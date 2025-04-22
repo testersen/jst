@@ -1,4 +1,4 @@
-import { assertEquals } from "@std/assert";
+import { assertEquals, assertThrows } from "@std/assert";
 
 import {
   Location,
@@ -195,6 +195,26 @@ Deno.test("LocationTracker", async (t) => {
     await t.step(
       `range.endLocation.column is ${END_COLUMN}`,
       () => assertEquals(range.endLocation.column, END_COLUMN),
+    );
+  });
+
+  await t.step("throws for negative column increments", () => {
+    const tracker = new LocationTracker();
+
+    assertThrows(
+      () => tracker.column(-1),
+      Error,
+      "Column increment must be non-negative",
+    );
+  });
+
+  await t.step("throws for negative line increments", () => {
+    const tracker = new LocationTracker();
+
+    assertThrows(
+      () => tracker.line(-1),
+      Error,
+      "Line increment must be non-negative",
     );
   });
 });
