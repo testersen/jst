@@ -224,8 +224,6 @@ export function processCharacter(
   character: string,
   tokens: Token[],
 ): void {
-  trackCharacter(state, character);
-
   switch (state.type) {
     case Mode.Literal:
       processLiteralCharacter(state, character, tokens);
@@ -339,6 +337,7 @@ export function processLiteralCharacter(
       state.buffer += character;
       break;
   }
+  trackCharacter(state, character);
 }
 
 /**
@@ -383,6 +382,7 @@ export function processEscapeCharacter(
       break;
   }
   transitionFromEscapeToLiteralMode(state);
+  trackCharacter(state, character);
 }
 
 /**
@@ -446,6 +446,7 @@ export function processInterpolationCharacter(
       state.buffer += character;
       break;
   }
+  trackCharacter(state, character);
 }
 
 /**
