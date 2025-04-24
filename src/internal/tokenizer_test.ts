@@ -1926,7 +1926,7 @@ Deno.test("processInterpolationCharacter(state, character, tokens)", async (t) =
   );
 });
 
-Deno.test("processCharacter(state, character, tokens", async (t) => {
+Deno.test("processCharacter(state, character, tokens)", async (t) => {
   await t.step("tracks characters", async (t) => {
     await process(t, createState(), [
       {
