@@ -235,6 +235,7 @@ export function processCharacter(
       processInterpolationCharacter(state, character, tokens);
       break;
   }
+  trackCharacter(state, character);
 }
 
 /**
@@ -337,7 +338,6 @@ export function processLiteralCharacter(
       state.buffer += character;
       break;
   }
-  trackCharacter(state, character);
 }
 
 /**
@@ -382,7 +382,6 @@ export function processEscapeCharacter(
       break;
   }
   transitionFromEscapeToLiteralMode(state);
-  trackCharacter(state, character);
 }
 
 /**
@@ -446,7 +445,6 @@ export function processInterpolationCharacter(
       state.buffer += character;
       break;
   }
-  trackCharacter(state, character);
 }
 
 /**
