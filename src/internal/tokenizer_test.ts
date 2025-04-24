@@ -34,15 +34,6 @@ import {
   TokenType,
 } from "./common.ts";
 
-// missing:
-// - Deno.test("processCharacter")
-// - Deno.test("tokenizeChunk")
-// - Deno.test("flushState")
-// - Deno.test("TokenizerStreamTransformer")
-// - Deno.test("TokenizerStream")
-// - Deno.test("tokenize")
-// - Deno.test("language tokenization patterns")
-
 /**
  * The {@link ExpectedRange} interface lets the caller define the expected
  * properties of a {@link RangeWithLocation} object.
