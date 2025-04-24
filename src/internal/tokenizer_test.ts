@@ -34,6 +34,15 @@ import {
   TokenType,
 } from "./common.ts";
 
+// missing:
+// - Deno.test("processCharacter")
+// - Deno.test("tokenizeChunk")
+// - Deno.test("flushState")
+// - Deno.test("TokenizerStreamTransformer")
+// - Deno.test("TokenizerStream")
+// - Deno.test("tokenize")
+// - Deno.test("language tokenization patterns")
+
 /**
  * The {@link ExpectedRange} interface lets the caller define the expected
  * properties of a {@link RangeWithLocation} object.
@@ -1915,4 +1924,307 @@ Deno.test("processInterpolationCharacter(state, character, tokens)", async (t) =
       });
     },
   );
+});
+
+Deno.test("processCharacter(state, character, tokens", async (t) => {
+  await t.step("tracks characters", async (t) => {
+    await process(t, createState(), [
+      {
+        value: "Hello world",
+        expectedBufferAfterProcessing: "Hello world",
+        expectedRangeAfterProcessing: {
+          start: 0,
+          end: 11,
+          length: 11,
+          endLocation: {
+            line: 1,
+            column: 11,
+          },
+        },
+      },
+      {
+        value: "\n",
+        expectedBufferAfterProcessing: "Hello world\n",
+        expectedRangeAfterProcessing: {
+          start: 0,
+          end: 12,
+          length: 12,
+          endLocation: {
+            line: 2,
+            column: 0,
+          },
+        },
+      },
+      {
+        value: "\r",
+        expectedBufferAfterProcessing: "Hello world\n\r",
+        expectedRangeAfterProcessing: {
+          start: 0,
+          end: 13,
+          length: 13,
+          endLocation: {
+            line: 2,
+            column: 0,
+          },
+        },
+      },
+      {
+        value: "foo",
+        expectedBufferAfterProcessing: "Hello world\n\rfoo",
+        expectedRangeAfterProcessing: {
+          start: 0,
+          end: 16,
+          length: 16,
+          endLocation: {
+            line: 2,
+            column: 3,
+          },
+        },
+      },
+    ]);
+  });
+
+  await t.step("changes to escape mode on \\", async (t) => {
+    await t.step("prepends \\ when not {", async (t) => {
+      await process(t, createState(), [
+        {
+          value: "\\",
+          expectedBufferAfterProcessing: null,
+          expectedTokenLength: 0,
+          expectedModeAfterProcessing: Mode.Escape,
+          expectedRangeAfterProcessing: {
+            start: 0,
+            end: 1,
+            length: 1,
+            endLocation: {
+              line: 1,
+              column: 1,
+            },
+          },
+        },
+        {
+          value: " ",
+          expectedBufferAfterProcessing: "",
+          expectedTokenLength: 1,
+          expectedModeAfterProcessing: Mode.Literal,
+          expectedLastToken: {
+            type: TokenType.Literal,
+            value: "\\ ",
+          },
+        },
+      ]);
+    });
+
+    await t.step("does not prepend \\ when {", async (t) => {
+      await process(t, createState(), [
+        {
+          value: "\\",
+          expectedBufferAfterProcessing: null,
+          expectedTokenLength: 0,
+          expectedModeAfterProcessing: Mode.Escape,
+          expectedRangeAfterProcessing: {
+            start: 0,
+            end: 1,
+            length: 1,
+            endLocation: {
+              line: 1,
+              column: 1,
+            },
+          },
+        },
+        {
+          value: "{",
+          expectedBufferAfterProcessing: "",
+          expectedTokenLength: 1,
+          expectedModeAfterProcessing: Mode.Literal,
+          expectedLastToken: {
+            type: TokenType.Literal,
+            value: "{",
+          },
+        },
+      ]);
+    });
+
+    await t.step("flushes previous buffers if any", async (t) => {
+      await process(t, createState(), [
+        {
+          value: "Hello, World!",
+          expectedBufferAfterProcessing: "Hello, World!",
+          expectedTokenLength: 0,
+          expectedRangeAfterProcessing: {
+            start: 0,
+            end: 13,
+            length: 13,
+            startLocation: {
+              line: 1,
+              column: 0,
+            },
+            endLocation: {
+              line: 1,
+              column: 13,
+            },
+          },
+        },
+        {
+          value: "\\",
+          expectedBufferAfterProcessing: null,
+          expectedTokenLength: 1,
+          expectedModeAfterProcessing: Mode.Escape,
+          expectedRangeAfterProcessing: {
+            start: 13,
+            end: 14,
+            length: 1,
+            endLocation: {
+              line: 1,
+              column: 14,
+            },
+          },
+          expectedLastToken: {
+            type: TokenType.Literal,
+            value: "Hello, World!",
+          },
+        },
+      ]);
+    });
+  });
+
+  await t.step("changes to interpolation mode on {", async (t) => {
+    await t.step("with no tokens when empty literal buffer", async (t) => {
+      await process(t, createState(), [
+        {
+          value: "{",
+          expectedBufferAfterProcessing: "",
+          expectedTokenLength: 0,
+          expectedModeAfterProcessing: Mode.Interpolation,
+          expectedRangeAfterProcessing: {
+            start: 0,
+            end: 1,
+            length: 1,
+            startLocation: {
+              line: 1,
+              column: 0,
+            },
+            endLocation: {
+              line: 1,
+              column: 1,
+            },
+          },
+        },
+      ]);
+    });
+
+    await t.step("flushes buffer if any", async (t) => {
+      await process(t, createState(), [
+        {
+          value: "Hello, World!",
+          expectedBufferAfterProcessing: "Hello, World!",
+          expectedTokenLength: 0,
+          expectedModeAfterProcessing: Mode.Literal,
+          expectedRangeAfterProcessing: {
+            start: 0,
+            end: 13,
+            length: 13,
+            startLocation: {
+              line: 1,
+              column: 0,
+            },
+            endLocation: {
+              line: 1,
+              column: 13,
+            },
+          },
+        },
+        {
+          value: "{",
+          expectedBufferAfterProcessing: "",
+          expectedTokenLength: 1,
+          expectedModeAfterProcessing: Mode.Interpolation,
+          expectedRangeAfterProcessing: {
+            start: 13,
+            end: 14,
+            length: 1,
+            startLocation: {
+              line: 1,
+              column: 13,
+            },
+            endLocation: {
+              line: 1,
+              column: 14,
+            },
+          },
+        },
+      ]);
+    });
+
+    await t.step("changes back to literal mode on }", async (t) => {
+      await t.step("ignores empty interpolation buffers", async (t) => {
+        const locationTracker = new LocationTracker();
+        const state: InterpolationMode = {
+          type: Mode.Interpolation,
+          locationTracker,
+          locationSnapshot: locationTracker.snapshot(),
+          n: 1,
+          buffer: "",
+        };
+        await process(t, state, [
+          {
+            value: "}",
+            expectedBufferAfterProcessing: "",
+            expectedTokenLength: 0,
+            expectedModeAfterProcessing: Mode.Literal,
+            expectedRangeAfterProcessing: {
+              start: 0,
+              end: 1,
+              length: 1,
+              startLocation: {
+                line: 1,
+                column: 0,
+              },
+              endLocation: {
+                line: 1,
+                column: 1,
+              },
+            },
+          },
+        ]);
+      });
+
+      await t.step("adds interpolation token", async (t) => {
+        const locationTracker = new LocationTracker();
+        locationTracker.column(3);
+        const state: InterpolationMode = {
+          type: Mode.Interpolation,
+          locationTracker,
+          locationSnapshot: locationTracker.snapshot(),
+          n: 1,
+          buffer: "foo",
+        };
+        await process(t, state, [
+          {
+            value: "}",
+            expectedBufferAfterProcessing: "",
+            expectedTokenLength: 1,
+            expectedModeAfterProcessing: Mode.Literal,
+            expectedLastToken: {
+              type: TokenType.Interpolation,
+              value: "foo",
+            },
+            expectedRangeAfterProcessing: {
+              start: 3,
+              end: 4,
+              length: 1,
+              startLocation: {
+                line: 1,
+                column: 3,
+              },
+              endLocation: {
+                line: 1,
+                column: 4,
+              },
+            },
+          },
+        ]);
+      });
+    });
+  });
 });
