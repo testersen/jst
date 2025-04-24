@@ -15,9 +15,11 @@ import {
   type InterpolationMode,
   type LiteralMode,
   Mode,
+  processCharacter,
   processEscapeCharacter,
   processInterpolationCharacter,
   processLiteralCharacter,
+  type State,
   trackCharacter,
   transitionFromEscapeToLiteralMode,
   transitionFromInterpolationToLiteralMode,
@@ -152,6 +154,162 @@ async function assertRange(
  */
 function sanitize(value: string): string {
   return JSON.stringify(value).slice(1, -1);
+}
+
+/**
+ * {@link ProcessingStep} is an interface that defines a sequence of characters
+ * to be processed - and what assertions to make on the resulting state, and
+ * produced tokens.
+ */
+interface ProcessingStep {
+  /**
+   * The string to be processed.
+   */
+  value: string;
+
+  expectedBufferAfterProcessing?: string | null;
+  expectedRangeAfterProcessing?: ExpectedRange;
+  expectedModeAfterProcessing?: Mode;
+
+  /**
+   * The expected amount of tokens produced by after the processing step. This
+   * does not include the tokens produced by previous steps.
+   */
+  expectedTokenLength?: number;
+
+  /**
+   * The expected
+   */
+  expectedLastToken?: {
+    type?: TokenType;
+    value?: string;
+  };
+}
+
+/**
+ * A utility function to process a sequence of characters and assert the
+ * resulting state and produced tokens.
+ *
+ * @param t The test context.
+ * @param state The state to be processed.
+ * @param steps The steps to be processed.
+ */
+async function process(
+  t: Deno.TestContext,
+  state: State,
+  steps: ProcessingStep[],
+) {
+  const allTokens: Token[] = [];
+  for (let i = 0; i < steps.length; i++) {
+    const s = steps[i];
+    await t.step(`${i + 1} - process ${sanitize(s.value)}`, async (t) => {
+      const tokens: Token[] = [];
+      for (const char of s.value) {
+        processCharacter(state, char, tokens);
+      }
+      allTokens.push(...tokens);
+
+      if (s.expectedBufferAfterProcessing !== undefined) {
+        switch (s.expectedBufferAfterProcessing) {
+          case null:
+            await t.step("buffer should be undefined", () => {
+              assertStrictEquals(
+                (state as AnyMode).buffer,
+                undefined,
+                "Buffer should be undefined",
+              );
+            });
+            break;
+          default: {
+            const sanitizedExpectedBuffer = sanitize(
+              s.expectedBufferAfterProcessing,
+            );
+            await t.step(
+              `buffer should be '${sanitizedExpectedBuffer}'`,
+              () =>
+                assertStrictEquals(
+                  (state as AnyMode).buffer,
+                  s.expectedBufferAfterProcessing,
+                  `Buffer should be ${sanitizedExpectedBuffer}`,
+                ),
+            );
+            break;
+          }
+        }
+      }
+
+      if (s.expectedModeAfterProcessing !== undefined) {
+        const expectedMode = Mode[s.expectedModeAfterProcessing];
+        await t.step(`state type should be ${expectedMode}`, () => {
+          assertStrictEquals(
+            state.type,
+            s.expectedModeAfterProcessing,
+            `State should be in ${expectedMode} mode, but was ${
+              Mode[state.type]
+            }`,
+          );
+        });
+      }
+
+      if (s.expectedRangeAfterProcessing !== undefined) {
+        await assertRange(
+          t,
+          "range should match expected range",
+          state.locationTracker.complete(state.locationSnapshot),
+          s.expectedRangeAfterProcessing,
+        );
+      }
+
+      if (s.expectedTokenLength !== undefined) {
+        await t.step(
+          `should have produced ${s.expectedTokenLength} tokens`,
+          () =>
+            assertStrictEquals(
+              tokens.length,
+              s.expectedTokenLength,
+            ),
+        );
+      }
+
+      if (
+        s.expectedLastToken?.type !== undefined ||
+        s.expectedLastToken?.value !== undefined
+      ) {
+        const lastToken = tokens[tokens.length - 1];
+
+        await t.step("last token should exist", () => {
+          assertExists(lastToken, "Last token should exist");
+        });
+
+        if (s.expectedLastToken.type !== undefined) {
+          const expectedType = s.expectedLastToken.type;
+          await t.step(
+            `last token type should be ${TokenType[expectedType]}`,
+            () =>
+              assertStrictEquals(
+                lastToken.type,
+                expectedType,
+                `Last token type should be ${TokenType[expectedType]}`,
+              ),
+          );
+        }
+
+        if (s.expectedLastToken.value !== undefined) {
+          const expectedValue = s.expectedLastToken.value;
+          const sanitizedExpectedValue = sanitize(expectedValue);
+          await t.step(
+            `last token value should be '${sanitizedExpectedValue}'`,
+            () =>
+              assertStrictEquals(
+                lastToken.value,
+                expectedValue,
+                `Last token value should be '${sanitizedExpectedValue}'`,
+              ),
+          );
+        }
+      }
+    });
+  }
 }
 
 Deno.test("createState()", async (t) => {
