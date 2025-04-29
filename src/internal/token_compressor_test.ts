@@ -49,7 +49,7 @@ Deno.test("compressTokens(tokens)", async (t) => {
     tokenize("foo\\bar\\baz{}\\{monday{tuesday}}{foo}{bar}"),
   );
 
-  await t.step("result should have 6 tokens", () => {
+  await t.step("tokens array should have 6 tokens", () => {
     assertStrictEquals(tokens.length, 6);
   });
 
