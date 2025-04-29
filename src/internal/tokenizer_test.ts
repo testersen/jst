@@ -2584,7 +2584,7 @@ Deno.test("new TokenizerStreamTransformer()", async (t) => {
       },
       error(error: unknown) {
         throw new AssertionError(
-          "controller.error() shouldn't have been called: " + error,
+          `controller.error() shouldn't have been called: ${error}`,
         );
       },
     } as unknown as TransformStreamDefaultController<Token>);
