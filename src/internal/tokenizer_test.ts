@@ -22,6 +22,7 @@ import {
   processInterpolationCharacter,
   processLiteralCharacter,
   type State,
+  tokenize,
   tokenizeChunk,
   trackCharacter,
   transitionFromEscapeToLiteralMode,
@@ -2407,5 +2408,58 @@ Deno.test("tokenizeChunk(state, chunk)", async (t) => {
       (state as AnyMode).buffer,
       "oobar",
     );
+  });
+});
+
+Deno.test("tokenize(value)", async (t) => {
+  const tokens = tokenize("Hello\\{{world}\\foobar");
+
+  await t.step("tokens array length should be 5", () => {
+    assertStrictEquals(tokens.length, 5);
+  });
+
+  await t.step("token 1/5 should be Literal with text Hello", () => {
+    assertStrictEquals(
+      tokens[0].type,
+      TokenType.Literal,
+      `expected Literal, received ${TokenType[tokens[0].type]}`,
+    );
+    assertStrictEquals(tokens[0].value, "Hello");
+  });
+
+  await t.step("token 2/5 should be Literal with text {", () => {
+    assertStrictEquals(
+      tokens[1].type,
+      TokenType.Literal,
+      `expected Literal, received ${TokenType[tokens[0].type]}`,
+    );
+    assertStrictEquals(tokens[1].value, "{");
+  });
+
+  await t.step("token 3/5 should be Interpolation with text world", () => {
+    assertStrictEquals(
+      tokens[2].type,
+      TokenType.Interpolation,
+      `expected Interpolation, received ${TokenType[tokens[2].type]}`,
+    );
+    assertStrictEquals(tokens[2].value, "world");
+  });
+
+  await t.step("token 4/5 should be Literal with text \\f", () => {
+    assertStrictEquals(
+      tokens[3].type,
+      TokenType.Literal,
+      `expected Literal, received ${TokenType[tokens[3].type]}`,
+    );
+    assertStrictEquals(tokens[3].value, "\\f");
+  });
+
+  await t.step("token 5/5 should be Literal with text oobar", () => {
+    assertStrictEquals(
+      tokens[4].type,
+      TokenType.Literal,
+      `expected Literal, received ${TokenType[tokens[4].type]}`,
+    );
+    assertStrictEquals(tokens[4].value, "oobar");
   });
 });
