@@ -47,7 +47,10 @@ export function flushState(state: State): Token[] {
 export function processToken(state: State, nextToken: Token): Token[] {
   const producedTokens: Token[] = [];
 
-  if (state.lastToken && state.lastToken.type !== nextToken.type) {
+  if (
+    state.lastToken && (state.lastToken.type !== nextToken.type ||
+      state.lastToken.range.end !== nextToken.range.start)
+  ) {
     // The two tokens are different types, so we need to flush the state.
     // We don't want to return, because there is a chance that the next token is
     // eligible for compression.
@@ -57,7 +60,10 @@ export function processToken(state: State, nextToken: Token): Token[] {
   // Between the previous check and the next check, the state.lastToken could
   // have been set to undefined.
 
-  if (state.lastToken && state.lastToken.type === nextToken.type) {
+  if (
+    state.lastToken && state.lastToken.type === nextToken.type &&
+    state.lastToken.range.end === nextToken.range.start
+  ) {
     // If the last token and the next token are of the same type, we can assume
     // that they are eligible for compression, because lastToken will never be
     // assigned for a token that is not eligible for compression.
