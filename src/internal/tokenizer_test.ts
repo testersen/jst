@@ -2,6 +2,7 @@ import {
   assertEquals,
   assertExists,
   assertInstanceOf,
+  AssertionError,
   assertNotStrictEquals,
   assertStrictEquals,
   assertThrows,
@@ -24,6 +25,8 @@ import {
   type State,
   tokenize,
   tokenizeChunk,
+  TokenizerStream,
+  TokenizerStreamTransformer,
   trackCharacter,
   transitionFromEscapeToLiteralMode,
   transitionFromInterpolationToLiteralMode,
@@ -2461,5 +2464,211 @@ Deno.test("tokenize(value)", async (t) => {
       `expected Literal, received ${TokenType[tokens[4].type]}`,
     );
     assertStrictEquals(tokens[4].value, "oobar");
+  });
+});
+
+Deno.test("new TokenizerStream()", async (t) => {
+  const chunks = [
+    "Hell",
+    "o \\{wo",
+    "rl",
+    "d} How are yo",
+    "u, {f",
+    "irstN",
+    "ame{}",
+    "}",
+  ];
+
+  const results = [
+    { type: TokenType.Literal, value: "Hello " },
+    { type: TokenType.Literal, value: "{" },
+    { type: TokenType.Literal, value: "world} How are you, " },
+    { type: TokenType.Interpolation, value: "firstName{}" },
+  ];
+
+  const stream = new TokenizerStream();
+
+  const writer = stream.writable.getWriter();
+
+  const awaitPromises: Promise<void>[] = [];
+
+  for (const chunk of chunks) {
+    awaitPromises.push(writer.write(chunk));
+  }
+
+  awaitPromises.push(writer.close());
+
+  let i = 0;
+
+  for await (const token of stream.readable) {
+    const currentToken = i++;
+    const expected = results.shift();
+
+    if (expected === undefined) {
+      throw new Error(`No token expected at index ${currentToken}`);
+    }
+
+    await t.step(`expect token at ${currentToken}`, async (t) => {
+      await t.step(
+        `expect token at ${currentToken} to be ${TokenType[expected.type]}`,
+        () => {
+          assertStrictEquals(
+            token.type,
+            expected.type,
+            `expected ${TokenType[expected.type]}, got ${
+              TokenType[token.type]
+            }`,
+          );
+        },
+      );
+
+      await t.step(
+        `expect token at ${currentToken} to have ${sanitize(token.value)}`,
+        () => assertStrictEquals(token.value, expected.value),
+      );
+    });
+  }
+
+  await Promise.all(awaitPromises);
+
+  await t.step("there should be no results left", () => {
+    assertStrictEquals(results.length, 0);
+  });
+});
+
+Deno.test("new TokenizerStreamTransformer()", async (t) => {
+  await t.step("no double start call", () => {
+    const transformer = new TokenizerStreamTransformer();
+
+    transformer.start();
+
+    assertThrows(
+      () => transformer.start(),
+      Error,
+      "TokenizerStreamTransformer has already been started",
+    );
+  });
+
+  await t.step("no transform before start", () => {
+    const transformer = new TokenizerStreamTransformer();
+
+    assertThrows(
+      // deno-lint-ignore no-explicit-any
+      () => transformer.transform("", {} as any),
+      Error,
+      "TokenizerStreamTransformer has not been started",
+    );
+  });
+
+  await t.step("no flush before start", () => {
+    const transformer = new TokenizerStreamTransformer();
+
+    assertThrows(
+      // deno-lint-ignore no-explicit-any
+      () => transformer.flush({} as any),
+      Error,
+      "TokenizerStreamTransformer has not been started",
+    );
+  });
+
+  await t.step("flush should not enqueue on empty buffer", () => {
+    const transformer = new TokenizerStreamTransformer();
+
+    transformer.start();
+
+    transformer.flush({
+      enqueue() {
+        throw new AssertionError(
+          "controller.enqueue() shouldn't have been called",
+        );
+      },
+      error(error: unknown) {
+        throw new AssertionError(
+          "controller.error() shouldn't have been called: " + error,
+        );
+      },
+    } as unknown as TransformStreamDefaultController<Token>);
+  });
+
+  await t.step("flush should enqueue on non-empty buffer", async (t) => {
+    const transformer = new TokenizerStreamTransformer();
+
+    const tokens: Token[] = [];
+
+    const controller = {
+      enqueue(value: Token) {
+        tokens.push(value);
+      },
+      error(error: unknown) {
+        throw error;
+      },
+    } as unknown as TransformStreamDefaultController<Token>;
+
+    transformer.start();
+
+    transformer.transform("foobar", controller);
+    transformer.flush(controller);
+
+    await t.step("should have produced 1 token", () => {
+      assertStrictEquals(tokens.length, 1);
+    });
+
+    await t.step("token should be literal", () => {
+      assertStrictEquals(
+        tokens[0].type,
+        TokenType.Literal,
+        `expected Literal, got ${TokenType[tokens[0].type]}`,
+      );
+    });
+  });
+
+  await t.step("flush should throw on escape mode", () => {
+    const transformer = new TokenizerStreamTransformer();
+
+    const tokens: Token[] = [];
+
+    const controller = {
+      enqueue(value: Token) {
+        tokens.push(value);
+      },
+      error(error: unknown) {
+        throw error;
+      },
+    } as unknown as TransformStreamDefaultController<Token>;
+
+    transformer.start();
+
+    transformer.transform("\\", controller);
+
+    assertThrows(
+      () => transformer.flush(controller),
+      Error,
+      "Unexpected end of input in escape mode. Did you forget to escape a character?",
+    );
+  });
+
+  await t.step("flush should throw on interpolation mode", () => {
+    const transformer = new TokenizerStreamTransformer();
+
+    const tokens: Token[] = [];
+
+    const controller = {
+      enqueue(value: Token) {
+        tokens.push(value);
+      },
+      error(error: unknown) {
+        throw error;
+      },
+    } as unknown as TransformStreamDefaultController<Token>;
+
+    transformer.start();
+
+    transformer.transform("{", controller);
+
+    assertThrows(
+      () => transformer.flush(controller),
+      Error,
+      "Unexpected end of input in interpolation mode. Did you forget to close a brace?",
+    );
   });
 });
