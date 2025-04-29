@@ -1,4 +1,4 @@
-import { assertEquals, assertThrows } from "@std/assert";
+import { assertEquals, assertStrictEquals, assertThrows } from "@std/assert";
 
 import {
   Location,
@@ -350,6 +350,86 @@ Deno.test("Token", async (t) => {
     await t.step(
       `token.range.endLocation.column is ${END_COLUMN}`,
       () => assertEquals(token.range.endLocation.column, END_COLUMN),
+    );
+  });
+
+  await t.step("concat(other)", async (t) => {
+    await t.step("throws for different types", () => {
+      // the offsets and locations doesn't really matter for this test.
+      const token1 = new Token(
+        TokenType.Literal,
+        "foo",
+        new RangeWithLocation(0, 0, new Location(1, 0), new Location(1, 0)),
+      );
+      const token2 = new Token(
+        TokenType.Interpolation,
+        "bar",
+        new RangeWithLocation(0, 0, new Location(1, 0), new Location(1, 0)),
+      );
+
+      assertThrows(
+        () => token1.concat(token2),
+        Error,
+        "Cannot concatenate tokens of different types",
+      );
+    });
+  });
+
+  await t.step("throws for non-adjacent tokens", () => {
+    // the offsets and locations doesn't really matter for this test.
+    const token1 = new Token(
+      TokenType.Literal,
+      "foo",
+      new RangeWithLocation(0, 0, new Location(1, 0), new Location(1, 0)),
+    );
+    const token2 = new Token(
+      TokenType.Literal,
+      "bar",
+      new RangeWithLocation(1, 1, new Location(1, 0), new Location(1, 0)),
+    );
+
+    assertThrows(
+      () => token1.concat(token2),
+      Error,
+      "Cannot concatenate tokens that are not adjacent",
+    );
+  });
+
+  await t.step("concatenates adjacent tokens", () => {
+    const token1 = new Token(
+      TokenType.Literal,
+      "foo",
+      new RangeWithLocation(0, 3, new Location(1, 0), new Location(1, 3)),
+    );
+    const token2 = new Token(
+      TokenType.Literal,
+      "bar",
+      new RangeWithLocation(3, 6, new Location(1, 3), new Location(1, 6)),
+    );
+
+    const result = token1.concat(token2);
+
+    assertEquals(result.type, TokenType.Literal);
+    assertEquals(result.value, "foobar");
+    assertEquals(result.range.start, 0);
+    assertEquals(result.range.end, 6);
+    assertEquals(result.range.startLocation.line, 1);
+    assertEquals(result.range.startLocation.column, 0);
+    assertEquals(result.range.endLocation.line, 1);
+    assertEquals(result.range.endLocation.column, 6);
+  });
+
+  await t.step("toString() returns a debug friendly representation", () => {
+    // the offsets and locations doesn't really matter for this test.
+    const token1 = new Token(
+      TokenType.Literal,
+      "foo",
+      new RangeWithLocation(0, 0, new Location(1, 0), new Location(1, 0)),
+    );
+
+    assertStrictEquals(
+      token1.toString(),
+      `Token(type=Literal, value="foo")`,
     );
   });
 });

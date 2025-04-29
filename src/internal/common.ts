@@ -323,4 +323,36 @@ export class Token {
   get range(): RangeWithLocation {
     return this.#range;
   }
+
+  /**
+   * Concatenate this token with another token.
+   * @param other The other token to concatenate with.
+   * @return A new token that is the concatenation of this token and the other
+   */
+  public concat(other: Token): Token {
+    if (this.#type !== other.#type) {
+      throw new Error("Cannot concatenate tokens of different types");
+    }
+
+    if (this.#range.end !== other.#range.start) {
+      throw new Error("Cannot concatenate tokens that are not adjacent");
+    }
+
+    const newValue = this.#value + other.#value;
+
+    const newRange = new RangeWithLocation(
+      this.#range.start,
+      other.#range.end,
+      this.#range.startLocation,
+      other.#range.endLocation,
+    );
+
+    return new Token(this.#type, newValue, newRange);
+  }
+
+  public toString(): string {
+    return `Token(type=${TokenType[this.#type]}, value=${
+      JSON.stringify(this.#value)
+    })`;
+  }
 }
