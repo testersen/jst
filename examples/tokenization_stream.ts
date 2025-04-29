@@ -1,4 +1,4 @@
-import { TokenizerStream, TokenType } from "../src/tokenizer.ts";
+import { type Token, TokenizerStream, TokenType } from "../src/tokenizer.ts";
 
 const chunks = [
   "Hell",
@@ -13,6 +13,19 @@ const chunks = [
 
 const stream = new TokenizerStream();
 
+const tokenToStdoutPromise = stream.readable
+  .pipeThrough(
+    new TransformStream<Token, string>({
+      transform(token, controller) {
+        controller.enqueue(
+          `<Token ${TokenType[token.type]} "${token.value}">\n`,
+        );
+      },
+    }),
+  )
+  .pipeThrough(new TextEncoderStream())
+  .pipeTo(Deno.stdout.writable, { preventClose: true });
+
 const writer = stream.writable.getWriter();
 
 for (const chunk of chunks) {
@@ -21,8 +34,4 @@ for (const chunk of chunks) {
 
 await writer.close();
 
-for await (const token of stream.readable) {
-  console.log(
-    `<Token ${TokenType[token.type]} "${token.value}">`,
-  );
-}
+await tokenToStdoutPromise;
