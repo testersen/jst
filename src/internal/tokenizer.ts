@@ -539,12 +539,8 @@ export class TokenizerStreamTransformer implements Transformer<string, Token> {
       throw new Error("TokenizerStreamTransformer has not been started");
     }
 
-    try {
-      for (const token of tokenizeChunk(this.#state, chunk)) {
-        controller.enqueue(token);
-      }
-    } catch (error) {
-      controller.error(error);
+    for (const token of tokenizeChunk(this.#state, chunk)) {
+      controller.enqueue(token);
     }
   }
 
