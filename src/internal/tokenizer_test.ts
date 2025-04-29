@@ -1915,6 +1915,40 @@ Deno.test("processInterpolationCharacter(state, character, tokens)", async (t) =
       });
     },
   );
+
+  await t.step("only adds to buffer when not {}", async (t) => {
+    const locationTracker = new LocationTracker();
+    const state: InterpolationMode = {
+      type: Mode.Interpolation,
+      locationTracker,
+      locationSnapshot: locationTracker.snapshot(),
+      n: 1,
+      buffer: "",
+    };
+    const tokens: Token[] = [];
+
+    await t.step("state is in interpolation mode", () => {
+      assertStrictEquals(
+        state.type,
+        Mode.Interpolation,
+        `State should be in Interpolation mode, but was ${Mode[state.type]}`,
+      );
+    });
+
+    await t.step("state n is 1 before processing", () => {
+      assertStrictEquals(state.n, 1, "n should be 1");
+    });
+
+    processInterpolationCharacter(state, "h", tokens);
+
+    await t.step("tokens is empty", () => {
+      assertStrictEquals(tokens.length, 0);
+    });
+
+    await t.step("buffer is h", () => {
+      assertStrictEquals(state.buffer, "h");
+    });
+  });
 });
 
 Deno.test("processCharacter(state, character, tokens)", async (t) => {
