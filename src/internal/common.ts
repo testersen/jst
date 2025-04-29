@@ -349,4 +349,10 @@ export class Token {
 
     return new Token(this.#type, newValue, newRange);
   }
+
+  public toString(): string {
+    return `Token(type=${TokenType[this.#type]}, value=${
+      JSON.stringify(this.#value)
+    })`;
+  }
 }
