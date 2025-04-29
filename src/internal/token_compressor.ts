@@ -20,7 +20,7 @@ export interface State {
 }
 
 /**
- * Process a single token.
+ * Flush the state of the compressor.
  * @param state The state of the compressor.
  * @returns An array of flushed tokens.
  *
