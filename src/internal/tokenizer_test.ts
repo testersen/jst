@@ -2375,7 +2375,7 @@ Deno.test("tokenizeChunk(state, chunk)", async (t) => {
     assertStrictEquals(
       tokens[1].type,
       TokenType.Literal,
-      `expected Literal, received ${TokenType[tokens[0].type]}`,
+      `expected Literal, received ${TokenType[tokens[1].type]}`,
     );
     assertStrictEquals(tokens[1].value, "{");
   });
