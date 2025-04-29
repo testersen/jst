@@ -3,15 +3,17 @@ import { compressTokens, TokenCompressorStream } from "./token_compressor.ts";
 import { tokenize } from "./tokenizer.ts";
 import { type Token, TokenType } from "./common.ts";
 
+type ExpectedToken = {
+  type?: TokenType;
+  value?: string;
+  start?: number;
+  end?: number;
+};
+
 async function assertToken(
   t: Deno.TestContext,
   actual: Token,
-  expected: {
-    type?: TokenType;
-    value?: string;
-    start?: number;
-    end?: number;
-  },
+  expected: ExpectedToken,
 ) {
   if (expected.type !== undefined) {
     await t.step(`should have type ${TokenType[expected.type]}`, () => {
@@ -43,16 +45,16 @@ async function assertToken(
 }
 
 Deno.test("compressTokens(tokens)", async (t) => {
-  const result = compressTokens(
+  const tokens = compressTokens(
     tokenize("foo\\bar\\baz{}\\{monday{tuesday}}{foo}{bar}"),
   );
 
   await t.step("result should have 6 tokens", () => {
-    assertStrictEquals(result.length, 6);
+    assertStrictEquals(tokens.length, 6);
   });
 
   await t.step("token 0", async (t) => {
-    await assertToken(t, result[0], {
+    await assertToken(t, tokens[0], {
       type: TokenType.Literal,
       value: "foo\\bar\\baz",
       start: 0,
@@ -61,7 +63,7 @@ Deno.test("compressTokens(tokens)", async (t) => {
   });
 
   await t.step("token 1", async (t) => {
-    await assertToken(t, result[1], {
+    await assertToken(t, tokens[1], {
       type: TokenType.Literal,
       value: "{monday",
       start: 14,
@@ -70,7 +72,7 @@ Deno.test("compressTokens(tokens)", async (t) => {
   });
 
   await t.step("token 2", async (t) => {
-    await assertToken(t, result[2], {
+    await assertToken(t, tokens[2], {
       type: TokenType.Interpolation,
       value: "tuesday",
       start: 22,
@@ -79,7 +81,7 @@ Deno.test("compressTokens(tokens)", async (t) => {
   });
 
   await t.step("token 3", async (t) => {
-    await assertToken(t, result[3], {
+    await assertToken(t, tokens[3], {
       type: TokenType.Literal,
       value: "}",
       start: 30,
@@ -88,7 +90,7 @@ Deno.test("compressTokens(tokens)", async (t) => {
   });
 
   await t.step("token 4", async (t) => {
-    await assertToken(t, result[4], {
+    await assertToken(t, tokens[4], {
       type: TokenType.Interpolation,
       value: "foo",
       start: 32,
@@ -97,7 +99,7 @@ Deno.test("compressTokens(tokens)", async (t) => {
   });
 
   await t.step("token 5", async (t) => {
-    await assertToken(t, result[5], {
+    await assertToken(t, tokens[5], {
       type: TokenType.Interpolation,
       value: "bar",
       start: 37,
