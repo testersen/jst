@@ -4,6 +4,7 @@ import {
   assertInstanceOf,
   assertNotStrictEquals,
   assertStrictEquals,
+  assertThrows,
 } from "@std/assert";
 
 import {
@@ -12,6 +13,7 @@ import {
   type EscapeMode,
   flushBuffer,
   flushRange,
+  flushState,
   type InterpolationMode,
   type LiteralMode,
   Mode,
@@ -2249,6 +2251,98 @@ Deno.test("processCharacter(state, character, tokens)", async (t) => {
             },
           },
         ]);
+      });
+    });
+  });
+});
+
+Deno.test("flushState(state, tokens)", async (t) => {
+  await t.step("throws on escape mode", () => {
+    const locationTracker = new LocationTracker();
+    const state = {
+      locationTracker,
+      locationSnapshot: locationTracker.snapshot(),
+      type: Mode.Escape,
+    } as EscapeMode;
+
+    assertThrows(
+      () => flushState(state, []),
+      Error,
+      "Unexpected end of input in escape mode. Did you forget to escape a character?",
+    );
+  });
+
+  await t.step("throws on interpolation mode", () => {
+    const locationTracker = new LocationTracker();
+    const state = {
+      locationTracker,
+      locationSnapshot: locationTracker.snapshot(),
+      type: Mode.Interpolation,
+      n: 1,
+      buffer: "",
+    } as InterpolationMode;
+
+    assertThrows(
+      () => flushState(state, []),
+      Error,
+      "Unexpected end of input in interpolation mode. Did you forget to close a brace?",
+    );
+  });
+
+  await t.step("handles literal mode", async (t) => {
+    await t.step("does not produce token on empty buffer", async (t) => {
+      const locationTracker = new LocationTracker();
+      const state = {
+        locationTracker,
+        locationSnapshot: locationTracker.snapshot(),
+        type: Mode.Literal,
+        buffer: "",
+      } as LiteralMode;
+      const tokens: Token[] = [];
+
+      await t.step("flushState should return undefined", () => {
+        assertStrictEquals(flushState(state, tokens), undefined);
+      });
+
+      await t.step("tokens array should be empty", () => {
+        assertStrictEquals(tokens.length, 0);
+      });
+    });
+
+    await t.step("produces token on non-empty buffer", async (t) => {
+      const locationTracker = new LocationTracker();
+      const state = {
+        locationTracker,
+        locationSnapshot: locationTracker.snapshot(),
+        type: Mode.Literal,
+        buffer: "foobar",
+      } as LiteralMode;
+      const tokens: Token[] = [];
+      let token!: Token;
+
+      await t.step("flushState should return a token", () => {
+        assertExists(token = flushState(state, tokens)!);
+      });
+
+      await t.step("tokens array should not be empty", () => {
+        assertStrictEquals(tokens.length, 1);
+      });
+
+      await t.step(
+        "returned token and first token in array should be the same",
+        () => assertStrictEquals(token, tokens[0]),
+      );
+
+      await t.step("token type is literal", () => {
+        assertStrictEquals(
+          token.type,
+          TokenType.Literal,
+          `expected Literal, but received ${TokenType[token.type]}`,
+        );
+      });
+
+      await t.step("token value is foobar", () => {
+        assertStrictEquals(token.value, "foobar");
       });
     });
   });
