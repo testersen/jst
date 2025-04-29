@@ -209,6 +209,21 @@ export function trackCharacter(state: State, character: string): void {
 }
 
 /**
+ * Ignores a character in the current state of the tokenizer. This is useful
+ * when tracking the offset for a token, but the token has opening or closing
+ * symbols that are not part of the token itself.
+ *
+ * @param state The current state of the tokenizer.
+ * @param character The character to ignore.
+ *
+ * @internal
+ */
+export function ignoreCharacter(state: State, character: string): void {
+  trackCharacter(state, character);
+  state.locationSnapshot = state.locationTracker.snapshot();
+}
+
+/**
  * The {@link processCharacter} function is used to process a character in the
  * current state of the tokenizer. If any tokens are generated, they will be
  * pushed to the provided tokens array.
@@ -235,7 +250,6 @@ export function processCharacter(
       processInterpolationCharacter(state, character, tokens);
       break;
   }
-  trackCharacter(state, character);
 }
 
 /**
@@ -333,8 +347,11 @@ export function processLiteralCharacter(
       break;
     case "{":
       transitionFromLiteralToInterpolationMode(state, tokens);
+      // We want to ignore the first character, because it isn't relevant.
+      ignoreCharacter(state, character);
       break;
     default:
+      trackCharacter(state, character);
       state.buffer += character;
       break;
   }
@@ -373,9 +390,13 @@ export function processEscapeCharacter(
   switch (character) {
     case "{":
     case "\\":
+      ignoreCharacter(state, "\\");
+      trackCharacter(state, character);
       tokens.push(new Token(TokenType.Literal, character, flushRange(state)));
       break;
     default:
+      trackCharacter(state, "\\");
+      trackCharacter(state, character);
       tokens.push(
         new Token(TokenType.Literal, `\\${character}`, flushRange(state)),
       );
@@ -422,6 +443,7 @@ export function processInterpolationCharacter(
 ): void {
   switch (character) {
     case "{":
+      trackCharacter(state, character);
       state.n++;
       state.buffer += character;
       break;
@@ -437,11 +459,15 @@ export function processInterpolationCharacter(
       state.n--;
       if (state.n === 0) {
         transitionFromInterpolationToLiteralMode(state, tokens);
+        // We want to ignore the last } because it isn't relevant.
+        ignoreCharacter(state, character);
       } else {
+        trackCharacter(state, character);
         state.buffer += character;
       }
       break;
     default:
+      trackCharacter(state, character);
       state.buffer += character;
       break;
   }

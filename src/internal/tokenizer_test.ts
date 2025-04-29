@@ -2026,11 +2026,11 @@ Deno.test("processCharacter(state, character, tokens)", async (t) => {
           expectedModeAfterProcessing: Mode.Escape,
           expectedRangeAfterProcessing: {
             start: 0,
-            end: 1,
-            length: 1,
+            end: 0,
+            length: 0,
             endLocation: {
               line: 1,
-              column: 1,
+              column: 0,
             },
           },
         },
@@ -2056,11 +2056,11 @@ Deno.test("processCharacter(state, character, tokens)", async (t) => {
           expectedModeAfterProcessing: Mode.Escape,
           expectedRangeAfterProcessing: {
             start: 0,
-            end: 1,
-            length: 1,
+            end: 0,
+            length: 0,
             endLocation: {
               line: 1,
-              column: 1,
+              column: 0,
             },
           },
         },
@@ -2104,11 +2104,11 @@ Deno.test("processCharacter(state, character, tokens)", async (t) => {
           expectedModeAfterProcessing: Mode.Escape,
           expectedRangeAfterProcessing: {
             start: 13,
-            end: 14,
-            length: 1,
+            end: 13,
+            length: 0,
             endLocation: {
               line: 1,
-              column: 14,
+              column: 13,
             },
           },
           expectedLastToken: {
@@ -2129,12 +2129,12 @@ Deno.test("processCharacter(state, character, tokens)", async (t) => {
           expectedTokenLength: 0,
           expectedModeAfterProcessing: Mode.Interpolation,
           expectedRangeAfterProcessing: {
-            start: 0,
+            start: 1,
             end: 1,
-            length: 1,
+            length: 0,
             startLocation: {
               line: 1,
-              column: 0,
+              column: 1,
             },
             endLocation: {
               line: 1,
@@ -2172,12 +2172,12 @@ Deno.test("processCharacter(state, character, tokens)", async (t) => {
           expectedTokenLength: 1,
           expectedModeAfterProcessing: Mode.Interpolation,
           expectedRangeAfterProcessing: {
-            start: 13,
+            start: 14,
             end: 14,
-            length: 1,
+            length: 0,
             startLocation: {
               line: 1,
-              column: 13,
+              column: 14,
             },
             endLocation: {
               line: 1,
@@ -2205,12 +2205,12 @@ Deno.test("processCharacter(state, character, tokens)", async (t) => {
             expectedTokenLength: 0,
             expectedModeAfterProcessing: Mode.Literal,
             expectedRangeAfterProcessing: {
-              start: 0,
+              start: 1,
               end: 1,
-              length: 1,
+              length: 0,
               startLocation: {
                 line: 1,
-                column: 0,
+                column: 1,
               },
               endLocation: {
                 line: 1,
@@ -2242,12 +2242,12 @@ Deno.test("processCharacter(state, character, tokens)", async (t) => {
               value: "foo",
             },
             expectedRangeAfterProcessing: {
-              start: 3,
+              start: 4,
               end: 4,
-              length: 1,
+              length: 0,
               startLocation: {
                 line: 1,
-                column: 3,
+                column: 4,
               },
               endLocation: {
                 line: 1,
@@ -2671,4 +2671,21 @@ Deno.test("new TokenizerStreamTransformer()", async (t) => {
       "Unexpected end of input in interpolation mode. Did you forget to close a brace?",
     );
   });
+});
+
+Deno.test("tokenize() offsets", async (t) => {
+  const str = "foo\\bar\\baz{}\\{monday{tuesday}}{foo}{bar}";
+  const tokens = tokenize(str);
+
+  for (let i = 0; i < tokens.length; i++) {
+    const token = tokens[i];
+    const expected = sanitize(token.value);
+    const subset = str.substring(token.range.start, token.range.end);
+    const sanitizedSubset = sanitize(subset);
+
+    await t.step(
+      `token ${i} should have same value as subset(${token.range.start}, ${token.range.end}) of str "${expected}" === "${sanitizedSubset}"`,
+      () => assertStrictEquals(subset, token.value),
+    );
+  }
 });
