@@ -1,4 +1,9 @@
-import { type Token, TokenizerStream, TokenType } from "../src/tokenizer.ts";
+import {
+  type Token,
+  TokenCompressorStream,
+  TokenizerStream,
+  TokenType,
+} from "../src/tokenizer.ts";
 
 const chunks = [
   "Hell",
@@ -8,12 +13,13 @@ const chunks = [
   "u, {f",
   "irstN",
   "ame{}",
-  "}",
+  "}?",
 ];
 
 const stream = new TokenizerStream();
 
 const tokenToStdoutPromise = stream.readable
+  .pipeThrough(new TokenCompressorStream())
   .pipeThrough(
     new TransformStream<Token, string>({
       transform(token, controller) {
