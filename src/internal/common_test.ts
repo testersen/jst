@@ -1,4 +1,4 @@
-import { assertEquals, assertThrows } from "@std/assert";
+import { assertEquals, assertStrictEquals, assertThrows } from "@std/assert";
 
 import {
   Location,
@@ -417,5 +417,19 @@ Deno.test("Token", async (t) => {
     assertEquals(result.range.startLocation.column, 0);
     assertEquals(result.range.endLocation.line, 1);
     assertEquals(result.range.endLocation.column, 6);
+  });
+
+  await t.step("toString() returns a debug friendly representation", () => {
+    // the offsets and locations doesn't really matter for this test.
+    const token1 = new Token(
+      TokenType.Literal,
+      "foo",
+      new RangeWithLocation(0, 0, new Location(1, 0), new Location(1, 0)),
+    );
+
+    assertStrictEquals(
+      token1.toString(),
+      `Token(type=Literal, value="foo")`,
+    );
   });
 });
