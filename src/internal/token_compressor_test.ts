@@ -53,57 +53,48 @@ Deno.test("compressTokens(tokens)", async (t) => {
     assertStrictEquals(tokens.length, 6);
   });
 
-  await t.step("token 0", async (t) => {
-    await assertToken(t, tokens[0], {
+  const results: ExpectedToken[] = [
+    {
       type: TokenType.Literal,
       value: "foo\\bar\\baz",
       start: 0,
       end: 11,
-    });
-  });
-
-  await t.step("token 1", async (t) => {
-    await assertToken(t, tokens[1], {
+    },
+    {
       type: TokenType.Literal,
       value: "{monday",
       start: 14,
       end: 21,
-    });
-  });
-
-  await t.step("token 2", async (t) => {
-    await assertToken(t, tokens[2], {
+    },
+    {
       type: TokenType.Interpolation,
       value: "tuesday",
       start: 22,
       end: 29,
-    });
-  });
-
-  await t.step("token 3", async (t) => {
-    await assertToken(t, tokens[3], {
+    },
+    {
       type: TokenType.Literal,
       value: "}",
       start: 30,
       end: 31,
-    });
-  });
-
-  await t.step("token 4", async (t) => {
-    await assertToken(t, tokens[4], {
+    },
+    {
       type: TokenType.Interpolation,
       value: "foo",
       start: 32,
       end: 35,
-    });
-  });
-
-  await t.step("token 5", async (t) => {
-    await assertToken(t, tokens[5], {
+    },
+    {
       type: TokenType.Interpolation,
       value: "bar",
       start: 37,
       end: 40,
+    },
+  ];
+
+  for (let i = 0; i < results.length; i++) {
+    await t.step(`token ${i}`, async () => {
+      await assertToken(t, tokens[i], results[i]);
     });
-  });
+  }
 });
