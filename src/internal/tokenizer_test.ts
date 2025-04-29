@@ -22,6 +22,7 @@ import {
   processInterpolationCharacter,
   processLiteralCharacter,
   type State,
+  tokenizeChunk,
   trackCharacter,
   transitionFromEscapeToLiteralMode,
   transitionFromInterpolationToLiteralMode,
@@ -2345,5 +2346,66 @@ Deno.test("flushState(state, tokens)", async (t) => {
         assertStrictEquals(token.value, "foobar");
       });
     });
+  });
+});
+
+Deno.test("tokenizeChunk(state, chunk)", async (t) => {
+  const state = createState();
+
+  const tokens = tokenizeChunk(state, "Hello\\{{world}\\foobar");
+
+  await t.step("tokens array length should be 4", () => {
+    assertStrictEquals(tokens.length, 4);
+  });
+
+  await t.step("token 1/4 should be Literal with text Hello", () => {
+    assertStrictEquals(
+      tokens[0].type,
+      TokenType.Literal,
+      `expected Literal, received ${TokenType[tokens[0].type]}`,
+    );
+    assertStrictEquals(tokens[0].value, "Hello");
+  });
+
+  await t.step("token 2/4 should be Literal with text {", () => {
+    assertStrictEquals(
+      tokens[1].type,
+      TokenType.Literal,
+      `expected Literal, received ${TokenType[tokens[0].type]}`,
+    );
+    assertStrictEquals(tokens[1].value, "{");
+  });
+
+  await t.step("token 3/4 should be Interpolation with text world", () => {
+    assertStrictEquals(
+      tokens[2].type,
+      TokenType.Interpolation,
+      `expected Interpolation, received ${TokenType[tokens[2].type]}`,
+    );
+    assertStrictEquals(tokens[2].value, "world");
+  });
+
+  await t.step("token 4/4 should be Literal with text \\f", () => {
+    assertStrictEquals(
+      tokens[3].type,
+      TokenType.Literal,
+      `expected Literal, received ${TokenType[tokens[3].type]}`,
+    );
+    assertStrictEquals(tokens[3].value, "\\f");
+  });
+
+  await t.step("state should be in literal mode", () => {
+    assertStrictEquals(
+      state.type,
+      Mode.Literal,
+      `expected Literal, received ${Mode[state.type]}`,
+    );
+  });
+
+  await t.step("state buffer should be oobar", () => {
+    assertStrictEquals(
+      (state as AnyMode).buffer,
+      "oobar",
+    );
   });
 });
