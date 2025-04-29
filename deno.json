@@ -1,0 +1,12 @@
+{
+  "name": "@testersen/jst",
+  "version": "0.1.0",
+  "license": "MIT",
+  "exports": {
+    ".": "./src/mod.ts",
+    "./tokenizer": "./src/tokenizer.ts"
+  },
+  "imports": {
+    "@std/assert": "jsr:@std/assert@^1.0.12"
+  }
+}
